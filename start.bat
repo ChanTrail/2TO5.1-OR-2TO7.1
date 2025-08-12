@@ -1,11 +1,12 @@
 @echo off
 
-REM 运行主程序，并添加错误处理
-.\python\python main.py || goto :error
+REM 启动主程序，如果失败则跳转到错误处理
+.\Python\python main.py || goto :error
 
-goto :end
+:end
+exit /b 0
 
 :error
-echo 发生错误，请检查日志并尝试重新运行脚本。
+echo 程序执行失败，请检查日志或联系开发者。
 pause
 exit /b 1

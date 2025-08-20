@@ -21,5 +21,4 @@ einops
 beartype
 rotary_embedding_torch
 https://huggingface.co/madbuda/triton-windows-builds/resolve/main/triton-3.0.0-cp312-cp312-win_amd64.whl
-
 sageattention

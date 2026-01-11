@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>立体声转5.1&7.1声道混音工具 Web GUI</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+				background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+				color: #fff;
+				min-height: 100vh;
+				padding: 20px;
+			}
+
+			.container {
+				max-width: 1400px;
+				margin: 0 auto;
+			}
+
+			header {
+				text-align: center;
+				padding: 20px 0;
+				margin-bottom: 30px;
+			}
+
+			header h1 {
+				font-size: 2.5em;
+				color: #00d4ff;
+				text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+			}
+
+			header p {
+				color: #888;
+				margin-top: 10px;
+			}
+
+			.status-bar {
+				background: rgba(255, 255, 255, 0.1);
+				padding: 15px 20px;
+				border-radius: 10px;
+				margin-bottom: 20px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.status-indicator {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+
+			.status-dot {
+				width: 12px;
+				height: 12px;
+				border-radius: 50%;
+				background: #ff4444;
+			}
+
+			.status-dot.ready {
+				background: #44ff44;
+				box-shadow: 0 0 10px rgba(68, 255, 68, 0.5);
+			}
+
+			.channel-selector {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+
+			.channel-selector select {
+				background: rgba(0, 212, 255, 0.2);
+				border: 1px solid #00d4ff;
+				color: #fff;
+				padding: 8px 15px;
+				border-radius: 8px;
+				font-size: 0.95em;
+				cursor: pointer;
+				outline: none;
+				transition: all 0.3s ease;
+			}
+
+			.channel-selector select:hover {
+				background: rgba(0, 212, 255, 0.3);
+			}
+
+			.channel-selector select option {
+				background: #1a1a2e;
+				color: #fff;
+			}
+
+			.channel-layout {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 25px;
+				margin-bottom: 30px;
+				justify-content: center;
+			}
+
+			.mixing-hint {
+				background: rgba(255, 193, 7, 0.15);
+				border: 1px solid rgba(255, 193, 7, 0.4);
+				border-radius: 10px;
+				padding: 15px 20px;
+				margin-bottom: 20px;
+				display: flex;
+				align-items: flex-start;
+				gap: 12px;
+			}
+
+			.mixing-hint-icon {
+				font-size: 1.3em;
+				line-height: 1;
+			}
+
+			.mixing-hint-content {
+				flex: 1;
+			}
+
+			.mixing-hint-title {
+				color: #ffc107;
+				font-weight: 600;
+				margin-bottom: 5px;
+			}
+
+			.mixing-hint-text {
+				color: rgba(255, 255, 255, 0.85);
+				font-size: 0.9em;
+				line-height: 1.5;
+			}
+
+			.channel-card {
+				background: rgba(255, 255, 255, 0.05);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				border-radius: 12px;
+				padding: 20px;
+				transition: all 0.3s ease;
+				flex-shrink: 0;
+				display: flex;
+				gap: 18px;
+				align-items: stretch;
+			}
+
+			.channel-card:hover {
+				background: rgba(255, 255, 255, 0.08);
+				border-color: rgba(0, 212, 255, 0.3);
+			}
+
+			.channel-controls {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 8px;
+				padding-right: 18px;
+				border-right: 1px solid rgba(255, 255, 255, 0.1);
+				min-width: 65px;
+			}
+
+			.channel-name {
+				font-size: 1em;
+				font-weight: 600;
+				color: #00d4ff;
+				text-align: center;
+				margin-bottom: 6px;
+				line-height: 1.35;
+			}
+
+			.channel-name-char {
+				display: block;
+			}
+
+			.channel-name-abbr {
+				display: block;
+				font-size: 0.85em;
+				color: rgba(0, 212, 255, 0.7);
+				margin-top: 2px;
+			}
+
+			.channel-buttons {
+				display: flex;
+				flex-direction: column;
+				gap: 5px;
+				margin-top: auto;
+			}
+
+			.channel-mute,
+			.channel-solo,
+			.channel-reset {
+				width: 34px;
+				height: 34px;
+				border-radius: 50%;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 0.9em;
+				font-weight: bold;
+				padding: 0;
+			}
+
+			.channel-mute {
+				background: rgba(255, 68, 68, 0.2);
+				border: 1px solid #ff4444;
+				color: #ff4444;
+			}
+
+			.channel-mute.muted {
+				background: #ff4444;
+				color: #fff;
+			}
+
+			.channel-mute:hover {
+				background: rgba(255, 68, 68, 0.4);
+			}
+
+			.sources-list {
+				display: flex;
+				flex-wrap: nowrap;
+				gap: 10px;
+				justify-content: flex-start;
+				align-items: stretch;
+			}
+
+			.source-item {
+				background: rgba(0, 0, 0, 0.3);
+				border-radius: 10px;
+				padding: 16px 10px;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				min-width: 86px;
+				max-width: 100px;
+			}
+
+			.source-header {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				margin-bottom: 8px;
+				text-align: center;
+			}
+
+			.source-name {
+				font-weight: 500;
+				color: #ffd700;
+				font-size: 0.95em;
+				margin-bottom: 6px;
+			}
+
+			.source-channel-type {
+				font-size: 0.65em;
+				color: #888;
+				background: rgba(255, 255, 255, 0.1);
+				padding: 2px 5px;
+				border-radius: 6px;
+			}
+
+			.volume-control {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 10px;
+				height: 200px;
+			}
+
+			.volume-slider {
+				-webkit-appearance: slider-vertical;
+				appearance: slider-vertical;
+				writing-mode: vertical-lr;
+				direction: rtl;
+				width: 10px;
+				height: 160px;
+				background: rgba(255, 255, 255, 0.2);
+				border-radius: 4px;
+				outline: none;
+			}
+
+			.volume-slider::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 14px;
+				height: 14px;
+				background: #00d4ff;
+				border-radius: 50%;
+				cursor: pointer;
+				box-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+			}
+
+			.volume-slider::-moz-range-thumb {
+				width: 14px;
+				height: 14px;
+				background: #00d4ff;
+				border-radius: 50%;
+				cursor: pointer;
+				border: none;
+			}
+
+			.volume-value {
+				min-width: 45px;
+				text-align: center;
+				font-family: monospace;
+				font-size: 1em;
+			}
+
+			.volume-input {
+				width: 42px;
+				background: rgba(255, 255, 255, 0.1);
+				border: 1px solid rgba(255, 255, 255, 0.3);
+				border-radius: 4px;
+				color: #fff;
+				text-align: center;
+				font-family: monospace;
+				font-size: 0.85em;
+				padding: 3px 4px;
+				outline: none;
+				transition: all 0.2s ease;
+			}
+
+			.volume-input:focus {
+				border-color: #00d4ff;
+				background: rgba(0, 212, 255, 0.2);
+				box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+			}
+
+			.volume-input::-webkit-inner-spin-button,
+			.volume-input::-webkit-outer-spin-button {
+				-webkit-appearance: none;
+				margin: 0;
+			}
+
+			.volume-input[type="number"] {
+				-moz-appearance: textfield;
+			}
+
+			.volume-input-wrapper {
+				display: flex;
+				align-items: center;
+				gap: 2px;
+				font-size: 0.85em;
+				color: rgba(255, 255, 255, 0.8);
+			}
+
+			.surround-visualization {
+				background: rgba(0, 0, 0, 0.4);
+				border-radius: 15px;
+				padding: 30px;
+				margin-bottom: 30px;
+				display: flex;
+				justify-content: center;
+			}
+
+			.surround-diagram {
+				position: relative;
+				width: 400px;
+				height: 300px;
+			}
+
+			.speaker-icon {
+				position: absolute;
+				width: 60px;
+				height: 60px;
+				background: rgba(0, 212, 255, 0.2);
+				border: 2px solid #00d4ff;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 0.8em;
+				font-weight: bold;
+				cursor: pointer;
+				transition: all 0.3s ease;
+			}
+
+			.speaker-icon:hover {
+				background: rgba(0, 212, 255, 0.4);
+				box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+			}
+
+			.speaker-icon.active {
+				background: #00d4ff;
+				color: #1a1a2e;
+			}
+
+			.speaker-icon.muted {
+				background: rgba(255, 68, 68, 0.2);
+				border-color: #ff4444;
+				color: #ff4444;
+			}
+
+			.speaker-lf {
+				left: 80px;
+				top: 20px;
+			}
+			.speaker-rf {
+				right: 80px;
+				top: 20px;
+			}
+			.speaker-c {
+				left: 50%;
+				top: 0;
+				transform: translateX(-50%);
+			}
+			.speaker-lfe {
+				left: 50%;
+				bottom: 0;
+				transform: translateX(-50%);
+			}
+			.speaker-ls {
+				left: 20px;
+				bottom: 60px;
+			}
+			.speaker-rs {
+				right: 20px;
+				bottom: 60px;
+			}
+
+			.speaker-lb {
+				left: 20px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+			.speaker-rb {
+				right: 20px;
+				top: 50%;
+				transform: translateY(-50%);
+			}
+
+			.listener-icon {
+				position: absolute;
+				left: 50%;
+				top: 50%;
+				transform: translate(-50%, -50%);
+				width: 50px;
+				height: 50px;
+				background: rgba(255, 215, 0, 0.3);
+				border: 2px solid #ffd700;
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+
+			.controls-bar {
+				background: rgba(255, 255, 255, 0.1);
+				padding: 20px;
+				border-radius: 15px;
+				display: flex;
+				justify-content: center;
+				gap: 20px;
+				flex-wrap: wrap;
+			}
+
+			.footer {
+				margin-top: 40px;
+				padding: 20px;
+				text-align: center;
+				border-top: 1px solid rgba(255, 255, 255, 0.1);
+				color: rgba(255, 255, 255, 0.6);
+				font-size: 0.9em;
+			}
+
+			.footer a {
+				color: #00d4ff;
+				text-decoration: none;
+				transition: color 0.3s ease;
+			}
+
+			.footer a:hover {
+				color: #66e0ff;
+				text-decoration: underline;
+			}
+
+			.footer-links {
+				margin-top: 8px;
+			}
+
+			.footer-links a {
+				margin: 0 10px;
+			}
+
+			.btn {
+				padding: 15px 30px;
+				border: none;
+				border-radius: 25px;
+				font-size: 1em;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+
+			.btn-primary {
+				background: linear-gradient(135deg, #00d4ff, #0099cc);
+				color: #fff;
+			}
+
+			.btn-primary:hover {
+				background: linear-gradient(135deg, #00e5ff, #00aadd);
+				box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+			}
+
+			.btn-success {
+				background: linear-gradient(135deg, #44ff44, #22cc22);
+				color: #1a1a2e;
+			}
+
+			.btn-success:hover {
+				background: linear-gradient(135deg, #55ff55, #33dd33);
+				box-shadow: 0 5px 20px rgba(68, 255, 68, 0.4);
+			}
+
+			.btn-warning {
+				background: linear-gradient(135deg, #ffd700, #cc9900);
+				color: #1a1a2e;
+			}
+
+			.btn-warning:hover {
+				background: linear-gradient(135deg, #ffe033, #ddaa11);
+				box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+			}
+
+			.btn-danger {
+				background: linear-gradient(135deg, #ff4444, #cc2222);
+				color: #fff;
+			}
+
+			.btn-danger:hover {
+				background: linear-gradient(135deg, #ff5555, #dd3333);
+				box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4);
+			}
+
+			.btn:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+
+			.playback-controls {
+				background: rgba(0, 0, 0, 0.4);
+				padding: 20px;
+				border-radius: 15px;
+				margin-bottom: 20px;
+			}
+
+			.playback-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 15px;
+			}
+
+			.playback-title {
+				font-size: 1.3em;
+				color: #00d4ff;
+			}
+
+			.time-display {
+				font-family: monospace;
+				font-size: 1.2em;
+				color: #ffd700;
+			}
+
+			.progress-bar {
+				width: 100%;
+				height: 10px;
+				background: rgba(255, 255, 255, 0.2);
+				border-radius: 5px;
+				margin-bottom: 15px;
+				cursor: pointer;
+				overflow: hidden;
+			}
+
+			.progress-fill {
+				height: 100%;
+				background: linear-gradient(90deg, #00d4ff, #ffd700);
+				border-radius: 5px;
+				width: 0%;
+				transition: width 0.1s linear;
+			}
+
+			.playback-buttons {
+				display: flex;
+				justify-content: center;
+				gap: 15px;
+			}
+
+			.master-volume {
+				display: flex;
+				align-items: center;
+				gap: 15px;
+				padding: 15px 20px;
+				background: rgba(255, 215, 0, 0.1);
+				border-radius: 10px;
+			}
+
+			.master-volume label {
+				color: #ffd700;
+				font-weight: 600;
+			}
+
+			.master-volume .volume-slider {
+				-webkit-appearance: none;
+				appearance: none;
+				writing-mode: horizontal-tb;
+				direction: ltr;
+				width: 150px;
+				height: 8px;
+				background: rgba(255, 255, 255, 0.2);
+				border-radius: 4px;
+			}
+
+			.loading-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.8);
+				display: none;
+				justify-content: center;
+				align-items: center;
+				z-index: 1000;
+			}
+
+			.loading-overlay.active {
+				display: flex;
+			}
+
+			.loading-spinner {
+				text-align: center;
+			}
+
+			.spinner {
+				width: 60px;
+				height: 60px;
+				border: 4px solid rgba(0, 212, 255, 0.3);
+				border-top-color: #00d4ff;
+				border-radius: 50%;
+				animation: spin 1s linear infinite;
+			}
+
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+
+			.loading-text {
+				margin-top: 20px;
+				color: #00d4ff;
+				font-size: 1.2em;
+			}
+
+			.toast {
+				position: fixed;
+				bottom: 30px;
+				right: 30px;
+				padding: 15px 25px;
+				border-radius: 10px;
+				color: #fff;
+				font-weight: 500;
+				transform: translateX(150%);
+				transition: transform 0.3s ease;
+				z-index: 1001;
+			}
+
+			.toast.show {
+				transform: translateX(0);
+			}
+
+			.toast.success {
+				background: linear-gradient(135deg, #44ff44, #22cc22);
+				color: #1a1a2e;
+			}
+
+			.toast.error {
+				background: linear-gradient(135deg, #ff4444, #cc2222);
+			}
+
+			.toast.info {
+				background: linear-gradient(135deg, #00d4ff, #0099cc);
+			}
+
+			.channel-solo {
+				background: rgba(255, 215, 0, 0.2);
+				border: 1px solid #ffd700;
+				color: #ffd700;
+			}
+
+			.channel-solo:hover {
+				background: rgba(255, 215, 0, 0.4);
+			}
+
+			.channel-solo.active {
+				background: #ffd700;
+				color: #1a1a2e;
+			}
+
+			.channel-reset {
+				background: rgba(0, 212, 255, 0.2);
+				border: 1px solid #00d4ff;
+				color: #00d4ff;
+			}
+
+			.channel-reset:hover {
+				background: rgba(0, 212, 255, 0.4);
+			}
+
+			.config-slots {
+				background: rgba(255, 255, 255, 0.08);
+				border: 1px solid rgba(255, 255, 255, 0.15);
+				border-radius: 15px;
+				padding: 20px;
+				margin-bottom: 20px;
+			}
+
+			.config-slots-header {
+				color: #00d4ff;
+				font-size: 1.1em;
+				font-weight: 600;
+				margin-bottom: 15px;
+				text-align: center;
+			}
+
+			.config-slots-container {
+				display: flex;
+				justify-content: center;
+				gap: 15px;
+				flex-wrap: wrap;
+			}
+
+			.config-slot {
+				background: rgba(0, 0, 0, 0.3);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				border-radius: 12px;
+				padding: 15px;
+				min-width: 200px;
+				transition: all 0.3s ease;
+			}
+
+			.config-slot:hover {
+				border-color: rgba(0, 212, 255, 0.4);
+			}
+
+			.config-slot.has-data {
+				border-color: rgba(68, 255, 68, 0.4);
+			}
+
+			.slot-name {
+				width: 100%;
+				background: rgba(255, 255, 255, 0.1);
+				border: 1px solid rgba(255, 255, 255, 0.2);
+				border-radius: 8px;
+				color: #ffd700;
+				font-size: 1em;
+				font-weight: 600;
+				padding: 8px 12px;
+				text-align: center;
+				margin-bottom: 12px;
+				outline: none;
+				transition: all 0.3s ease;
+			}
+
+			.slot-name:focus {
+				border-color: #00d4ff;
+				background: rgba(255, 255, 255, 0.15);
+			}
+
+			.slot-buttons {
+				display: flex;
+				gap: 8px;
+				justify-content: center;
+			}
+
+			.btn-sm {
+				padding: 8px 16px;
+				font-size: 0.85em;
+				border-radius: 15px;
+			}
+
+			.audio-files-panel {
+				background: rgba(255, 255, 255, 0.08);
+				border: 1px solid rgba(255, 255, 255, 0.15);
+				border-radius: 15px;
+				padding: 20px;
+				margin-bottom: 20px;
+			}
+
+			.audio-files-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 15px;
+			}
+
+			.audio-files-title {
+				color: #00d4ff;
+				font-size: 1.2em;
+				font-weight: 600;
+			}
+
+			.audio-files-count {
+				background: rgba(0, 212, 255, 0.2);
+				color: #00d4ff;
+				padding: 5px 15px;
+				border-radius: 20px;
+				font-size: 0.9em;
+			}
+
+			.audio-files-list {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				margin-bottom: 15px;
+				max-height: 200px;
+				overflow-y: auto;
+			}
+
+			.audio-file-item {
+				background: rgba(0, 0, 0, 0.3);
+				border: 2px solid rgba(255, 255, 255, 0.1);
+				border-radius: 10px;
+				padding: 10px 15px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+
+			.audio-file-item:hover {
+				background: rgba(255, 255, 255, 0.1);
+				border-color: rgba(0, 212, 255, 0.5);
+			}
+
+			.audio-file-item.active {
+				background: rgba(0, 212, 255, 0.2);
+				border-color: #00d4ff;
+			}
+
+			.audio-file-item.exported {
+				border-color: rgba(68, 255, 68, 0.6);
+			}
+
+			.audio-file-item.exported::after {
+				content: "✓";
+				color: #44ff44;
+				margin-left: 5px;
+			}
+
+			.audio-file-name {
+				font-weight: 500;
+				color: #fff;
+				max-width: 200px;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.audio-file-index {
+				background: rgba(255, 215, 0, 0.2);
+				color: #ffd700;
+				padding: 2px 8px;
+				border-radius: 10px;
+				font-size: 0.8em;
+			}
+
+			.batch-controls {
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
+				justify-content: center;
+				padding-top: 15px;
+				border-top: 1px solid rgba(255, 255, 255, 0.1);
+			}
+
+			.current-audio-indicator {
+				background: rgba(255, 215, 0, 0.1);
+				border: 1px solid rgba(255, 215, 0, 0.3);
+				border-radius: 10px;
+				padding: 10px 20px;
+				margin-bottom: 20px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.current-audio-name {
+				color: #ffd700;
+				font-size: 1.1em;
+				font-weight: 600;
+			}
+
+			.current-audio-nav {
+				display: flex;
+				gap: 10px;
+			}
+
+			.btn-nav {
+				background: rgba(255, 215, 0, 0.2);
+				border: 1px solid #ffd700;
+				color: #ffd700;
+				padding: 5px 15px;
+				border-radius: 15px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+			}
+
+			.btn-nav:hover:not(:disabled) {
+				background: #ffd700;
+				color: #1a1a2e;
+			}
+
+			.btn-nav:disabled {
+				opacity: 0.4;
+				cursor: not-allowed;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<header>
+				<h1>🎵 立体声转5.1&7.1声道混音工具 Web GUI</h1>
+				<p>调整每个声道的音源音量，实时预览混音效果</p>
+			</header>
+
+			<div class="status-bar">
+				<div class="status-indicator">
+					<div class="status-dot" id="statusDot"></div>
+					<span id="statusText">正在加载...</span>
+				</div>
+				<div class="channel-selector">
+					<span>声道模式:</span>
+					<select
+						id="channelModeSelect"
+						onchange="switchChannelMode(this.value)"
+					>
+						<option value="5">5.1 声道</option>
+						<option value="7">7.1 声道</option>
+					</select>
+				</div>
+			</div>
+
+			<div class="audio-files-panel" id="audioFilesPanel" style="display: none">
+				<div class="audio-files-header">
+					<span class="audio-files-title">📁 音频文件列表</span>
+					<span class="audio-files-count" id="audioFilesCount">0/0 已导出</span>
+				</div>
+				<div class="audio-files-list" id="audioFilesList"></div>
+				<div class="batch-controls">
+					<button class="btn btn-primary btn-sm" id="btnApplyToAll">
+						📋 应用当前配置到所有文件
+					</button>
+					<button class="btn btn-primary btn-sm" id="btnApplyToRemaining">
+						📋 应用当前配置到未导出文件
+					</button>
+					<button class="btn btn-success btn-sm" id="btnExportAll">
+						💾 导出所有文件
+					</button>
+				</div>
+			</div>
+
+			<div
+				class="current-audio-indicator"
+				id="currentAudioIndicator"
+				style="display: none"
+			>
+				<div>
+					<span>当前编辑: </span>
+					<span class="current-audio-name" id="currentAudioName">--</span>
+				</div>
+				<div class="current-audio-nav">
+					<button class="btn-nav" id="btnPrevAudio" disabled>⬅️ 上一个</button>
+					<button class="btn-nav" id="btnNextAudio" disabled>下一个 ➡️</button>
+				</div>
+			</div>
+
+			<div class="surround-visualization">
+				<div class="surround-diagram" id="surroundDiagram">
+					<div class="listener-icon">👤</div>
+				</div>
+			</div>
+
+			<div class="playback-controls">
+				<div class="playback-header">
+					<span class="playback-title">🎧 实时预览播放器</span>
+					<span class="time-display" id="timeDisplay">00:00 / 00:00</span>
+				</div>
+				<div class="progress-bar" id="progressBar">
+					<div class="progress-fill" id="progressFill"></div>
+				</div>
+				<div class="playback-buttons">
+					<button class="btn btn-success" id="btnPlay" disabled>▶️ 播放</button>
+					<button class="btn btn-warning" id="btnPause" disabled>
+						⏸️ 暂停
+					</button>
+					<button class="btn btn-danger" id="btnStop" disabled>⏹️ 停止</button>
+					<div class="master-volume">
+						<label>🔊 主音量</label>
+						<input
+							type="range"
+							class="volume-slider"
+							id="masterVolume"
+							min="0"
+							max="100"
+							value="80"
+						/>
+						<input
+							type="number"
+							class="volume-input"
+							id="masterVolumeValue"
+							value="80"
+							min="0"
+							max="100"
+						/>%
+					</div>
+				</div>
+			</div>
+
+			<div class="controls-bar" style="margin-bottom: 20px">
+				<span
+					id="currentSlotIndicator"
+					style="color: #ffd700; margin-right: 20px; margin-top: 1em"
+					>当前: 未保存的配置</span
+				>
+				<button class="btn btn-warning" id="btnReset">🔄 重置为当前配置</button>
+				<button class="btn btn-danger" id="btnResetToDefault">
+					🏠 重置为默认配置
+				</button>
+			</div>
+
+			<div class="config-slots">
+				<div class="config-slots-header">
+					<span
+						>💾 配置槽 (点击名称可编辑) -
+						<span id="configSlotModeLabel">5.1 声道</span></span
+					>
+				</div>
+				<div class="config-slots-container">
+					<div class="config-slot" id="configSlot1">
+						<input
+							type="text"
+							class="slot-name"
+							id="slotName1"
+							value="配置 1"
+							maxlength="20"
+						/>
+						<div class="slot-buttons">
+							<button class="btn btn-sm btn-primary" onclick="saveToSlot(1)">
+								保存
+							</button>
+							<button
+								class="btn btn-sm btn-success"
+								onclick="loadFromSlot(1)"
+								id="loadBtn1"
+								disabled
+							>
+								加载
+							</button>
+						</div>
+					</div>
+					<div class="config-slot" id="configSlot2">
+						<input
+							type="text"
+							class="slot-name"
+							id="slotName2"
+							value="配置 2"
+							maxlength="20"
+						/>
+						<div class="slot-buttons">
+							<button class="btn btn-sm btn-primary" onclick="saveToSlot(2)">
+								保存
+							</button>
+							<button
+								class="btn btn-sm btn-success"
+								onclick="loadFromSlot(2)"
+								id="loadBtn2"
+								disabled
+							>
+								加载
+							</button>
+						</div>
+					</div>
+					<div class="config-slot" id="configSlot3">
+						<input
+							type="text"
+							class="slot-name"
+							id="slotName3"
+							value="配置 3"
+							maxlength="20"
+						/>
+						<div class="slot-buttons">
+							<button class="btn btn-sm btn-primary" onclick="saveToSlot(3)">
+								保存
+							</button>
+							<button
+								class="btn btn-sm btn-success"
+								onclick="loadFromSlot(3)"
+								id="loadBtn3"
+								disabled
+							>
+								加载
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="mixing-hint">
+				<span class="mixing-hint-icon">💡</span>
+				<div class="mixing-hint-content">
+					<div class="mixing-hint-title">混音设置说明</div>
+					<div class="mixing-hint-text">
+						下方的百分比表示各音源在该声道中的<strong>混合比例</strong>，而非绝对音量。
+						导出时系统会自动将混音结果归一化到统一的音量级别，确保不会出现爆音或过于微弱的情况。
+						例如：设置 100% 和 50% 的效果与 200% 和 100% 相同，它们的比例都是
+						2:1。
+					</div>
+				</div>
+			</div>
+
+			<div class="channel-layout" id="channelLayout"></div>
+
+			<div class="controls-bar">
+				<button class="btn btn-success" id="btnExport">💾 导出混音</button>
+			</div>
+
+			<footer class="footer">
+				<div>
+					© <span id="currentYear"></span> ChanTrail |
+					立体声转5.1&7.1声道混音工具 | 基于 BS-RoFormer 模型
+				</div>
+				<div class="footer-links">
+					<a id="githubLink" href="#" target="_blank">💻 GitHub</a>
+					<span style="color: rgba(255, 255, 255, 0.3)">|</span>
+					<a id="issuesLink" href="#" target="_blank">🐛 问题反馈</a>
+				</div>
+			</footer>
+		</div>
+
+		<div class="loading-overlay" id="loadingOverlay">
+			<div class="loading-spinner">
+				<div class="spinner"></div>
+				<p class="loading-text" id="loadingText">正在处理...</p>
+			</div>
+		</div>
+
+		<div class="toast" id="toast"></div>
+
+		<audio id="audioPlayer" crossorigin="anonymous"></audio>
+
+		<script>
+			const PROJECT_GITHUB_URL =
+				"https://github.com/ChanTrail/2TO5.1-OR-2TO7.1";
+
+			let channelConfig = {};
+			let defaultChannelConfig = {};
+			let serverDefaultConfig = {};
+			let channelCount = 5;
+			let audioContext = null;
+			let audioPlayer = null;
+			let isPlaying = false;
+			let channelMuted = {};
+			let channelSolo = {};
+			let previewDebounceTimer = null;
+			let isGeneratingPreview = false;
+
+			let audioFiles = [];
+			let currentAudioIndex = 0;
+			let isMultiFileMode = false;
+
+			let currentConfigSlot = null;
+
+			document.getElementById("currentYear").innerText =
+				new Date().getFullYear();
+			document.getElementById("githubLink").href = PROJECT_GITHUB_URL;
+			document.getElementById("issuesLink").href =
+				PROJECT_GITHUB_URL + "/issues";
+
+			const channelNames51 = {
+				left_front: { name: "左前 (L)", abbr: "L", class: "speaker-lf" },
+				right_front: { name: "右前 (R)", abbr: "R", class: "speaker-rf" },
+				center: { name: "中置 (C)", abbr: "C", class: "speaker-c" },
+				lfe: { name: "低音 (LFE)", abbr: "LFE", class: "speaker-lfe" },
+				left_surround: { name: "左环绕 (LS)", abbr: "LS", class: "speaker-ls" },
+				right_surround: {
+					name: "右环绕 (RS)",
+					abbr: "RS",
+					class: "speaker-rs",
+				},
+			};
+
+			const channelNames71 = {
+				...channelNames51,
+				rear_left_surround: {
+					name: "左后环绕 (LB)",
+					abbr: "LB",
+					class: "speaker-lb",
+				},
+				rear_right_surround: {
+					name: "右后环绕 (RB)",
+					abbr: "RB",
+					class: "speaker-rb",
+				},
+			};
+
+			function formatVerticalChannelName(name) {
+				const match = name.match(/^(.+?)\s*(\([^)]+\))$/);
+				if (match) {
+					const chineseChars = match[1].split("");
+					const abbr = match[2];
+					let html = chineseChars
+						.map((c) => `<span class="channel-name-char">${c}</span>`)
+						.join("");
+					html += `<span class="channel-name-abbr">${abbr}</span>`;
+					return html;
+				}
+				return name;
+			}
+
+			const sourceNames = {
+				vocals: "人声",
+				bass: "低音",
+				drums: "鼓",
+				guitar: "吉他",
+				instrumental: "伴奏",
+				piano: "钢琴",
+				other: "其他",
+			};
+
+			const channelTypeNames = {
+				left: "左声道",
+				right: "右声道",
+				mono: "单声道",
+			};
+
+			document.addEventListener("DOMContentLoaded", function () {
+				audioPlayer = document.getElementById("audioPlayer");
+
+				const savedMasterVolume = localStorage.getItem("mixerMasterVolume");
+				const masterVolumeSlider = document.getElementById("masterVolume");
+				const masterVolumeInput = document.getElementById("masterVolumeValue");
+
+				if (savedMasterVolume !== null) {
+					const volumeValue = parseInt(savedMasterVolume);
+					masterVolumeSlider.value = volumeValue;
+					masterVolumeInput.value = volumeValue;
+					audioPlayer.volume = volumeValue / 100;
+					console.log("从 localStorage 恢复主音量:", volumeValue);
+				} else {
+					const initialVolume = parseInt(masterVolumeSlider.value) / 100;
+					audioPlayer.volume = initialVolume;
+					masterVolumeInput.value = masterVolumeSlider.value;
+					console.log("初始化主音量:", initialVolume);
+				}
+
+				initConfigSlots();
+
+				loadStatus();
+				setupEventListeners();
+			});
+
+			function setupEventListeners() {
+				document.getElementById("btnPlay").addEventListener("click", playAudio);
+				document
+					.getElementById("btnPause")
+					.addEventListener("click", pauseAudio);
+				document.getElementById("btnStop").addEventListener("click", stopAudio);
+
+				document
+					.getElementById("masterVolume")
+					.addEventListener("input", function (e) {
+						const value = e.target.value;
+						document.getElementById("masterVolumeValue").value = value;
+						audioPlayer.volume = value / 100;
+						localStorage.setItem("mixerMasterVolume", value);
+					});
+
+				document
+					.getElementById("masterVolumeValue")
+					.addEventListener("input", function (e) {
+						let value = parseInt(e.target.value) || 0;
+						value = Math.max(0, Math.min(100, value));
+						document.getElementById("masterVolume").value = value;
+						audioPlayer.volume = value / 100;
+						localStorage.setItem("mixerMasterVolume", value);
+					});
+
+				document
+					.getElementById("masterVolumeValue")
+					.addEventListener("blur", function (e) {
+						let value = parseInt(e.target.value) || 0;
+						value = Math.max(0, Math.min(100, value));
+						e.target.value = value;
+					});
+
+				document
+					.getElementById("progressBar")
+					.addEventListener("click", seekAudio);
+
+				document
+					.getElementById("btnReset")
+					.addEventListener("click", resetConfig);
+				document
+					.getElementById("btnResetToDefault")
+					.addEventListener("click", resetToServerDefault);
+				document
+					.getElementById("btnExport")
+					.addEventListener("click", exportAudio);
+
+				for (let i = 1; i <= 3; i++) {
+					document
+						.getElementById(`slotName${i}`)
+						.addEventListener("change", function () {
+							saveSlotName(i, this.value);
+						});
+				}
+
+				document
+					.getElementById("btnApplyToAll")
+					.addEventListener("click", applyConfigToAll);
+				document
+					.getElementById("btnApplyToRemaining")
+					.addEventListener("click", applyConfigToRemaining);
+				document
+					.getElementById("btnExportAll")
+					.addEventListener("click", exportAllAudio);
+				document
+					.getElementById("btnPrevAudio")
+					.addEventListener("click", () => navigateAudio(-1));
+				document
+					.getElementById("btnNextAudio")
+					.addEventListener("click", () => navigateAudio(1));
+
+				audioPlayer.addEventListener("timeupdate", updateProgress);
+				audioPlayer.loop = true;
+			}
+
+			async function loadStatus() {
+				try {
+					const response = await fetch("/api/status");
+					const data = await response.json();
+
+					if (data.is_ready) {
+						document.getElementById("statusDot").classList.add("ready");
+						document.getElementById("statusText").textContent = "已就绪";
+						channelCount = data.channel_count;
+						document.getElementById("channelModeSelect").value = channelCount;
+
+						audioFiles = data.audio_files || [];
+						currentAudioIndex = data.current_audio_index || 0;
+						isMultiFileMode = audioFiles.length > 1;
+
+						if (audioFiles.length > 0) {
+							document.getElementById("currentAudioIndicator").style.display =
+								"flex";
+							updateCurrentAudioIndicator();
+						}
+
+						if (isMultiFileMode) {
+							document.getElementById("audioFilesPanel").style.display =
+								"block";
+							renderAudioFilesList();
+						}
+
+						await loadConfig();
+					} else {
+						showToast("会话未就绪，请检查音频文件", "error");
+					}
+				} catch (e) {
+					showToast("无法连接到服务器", "error");
+				}
+			}
+
+			async function loadConfig(isInitialLoad = true) {
+				try {
+					const response = await fetch("/api/config");
+					const data = await response.json();
+					channelConfig = data.channel_config;
+					channelCount = data.channel_count;
+
+					if (data.default_config) {
+						serverDefaultConfig = JSON.parse(
+							JSON.stringify(data.default_config)
+						);
+					}
+
+					if (isInitialLoad || Object.keys(defaultChannelConfig).length === 0) {
+						defaultChannelConfig = JSON.parse(
+							JSON.stringify(data.channel_config)
+						);
+					}
+
+					channelMuted = {};
+					channelSolo = {};
+
+					currentConfigSlot = null;
+					updateCurrentSlotIndicator();
+
+					initConfigSlots();
+
+					renderChannelLayout();
+					renderSurroundDiagram();
+
+					await generatePreview();
+				} catch (e) {
+					showToast("加载配置失败", "error");
+				}
+			}
+
+			function renderAudioFilesList() {
+				const listContainer = document.getElementById("audioFilesList");
+				listContainer.innerHTML = "";
+
+				let exportedCount = 0;
+				audioFiles.forEach((file, index) => {
+					if (file.export_completed) exportedCount++;
+
+					const item = document.createElement("div");
+					item.className =
+						"audio-file-item" +
+						(index === currentAudioIndex ? " active" : "") +
+						(file.export_completed ? " exported" : "");
+					item.innerHTML = `
+						<span class="audio-file-index">#${index + 1}</span>
+						<span class="audio-file-name">${file.name}</span>
+					`;
+					item.onclick = () => selectAudioFile(index);
+					listContainer.appendChild(item);
+				});
+
+				document.getElementById(
+					"audioFilesCount"
+				).textContent = `${exportedCount}/${audioFiles.length} 已导出`;
+			}
+
+			function updateCurrentAudioIndicator() {
+				const currentFile = audioFiles[currentAudioIndex];
+				if (currentFile) {
+					if (audioFiles.length > 1) {
+						document.getElementById("currentAudioName").textContent = `${
+							currentFile.name
+						} (${currentAudioIndex + 1}/${audioFiles.length})`;
+					} else {
+						document.getElementById("currentAudioName").textContent =
+							currentFile.name;
+					}
+				}
+
+				document.getElementById("btnPrevAudio").disabled =
+					currentAudioIndex <= 0;
+				document.getElementById("btnNextAudio").disabled =
+					currentAudioIndex >= audioFiles.length - 1;
+			}
+
+			async function selectAudioFile(index) {
+				if (index === currentAudioIndex) return;
+
+				showLoading("正在切换音频文件...");
+				stopAudio();
+
+				try {
+					const response = await fetch(`/api/select_audio/${index}`, {
+						method: "POST",
+					});
+					const data = await response.json();
+
+					if (data.status === "ok") {
+						currentAudioIndex = index;
+						channelConfig = data.channel_config;
+
+						defaultChannelConfig = JSON.parse(
+							JSON.stringify(data.channel_config)
+						);
+
+						channelMuted = {};
+						channelSolo = {};
+
+						currentConfigSlot = null;
+						updateCurrentSlotIndicator();
+
+						renderAudioFilesList();
+						updateCurrentAudioIndicator();
+						renderChannelLayout();
+						updateSurroundDiagramState();
+
+						await generatePreview();
+						showToast(`已切换到: ${data.name}`, "success");
+					} else {
+						showToast("切换失败: " + (data.error || "未知错误"), "error");
+					}
+				} catch (e) {
+					showToast("切换失败", "error");
+				}
+
+				hideLoading();
+			}
+
+			function navigateAudio(direction) {
+				const newIndex = currentAudioIndex + direction;
+				if (newIndex >= 0 && newIndex < audioFiles.length) {
+					selectAudioFile(newIndex);
+				}
+			}
+
+			async function applyConfigToAll() {
+				if (!confirm("确定要将当前配置应用到所有音频文件吗？")) return;
+
+				showLoading("正在应用配置到所有文件...");
+
+				try {
+					const response = await fetch("/api/apply_config_to_all", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ channel_config: channelConfig }),
+					});
+					const data = await response.json();
+
+					if (data.status === "ok") {
+						showToast(`配置已应用到 ${data.applied_to} 个文件`, "success");
+					} else {
+						showToast("应用失败: " + (data.error || "未知错误"), "error");
+					}
+				} catch (e) {
+					showToast("应用配置失败", "error");
+				}
+
+				hideLoading();
+			}
+
+			async function applyConfigToRemaining() {
+				if (!confirm("确定要将当前配置应用到所有未导出的音频文件吗？")) return;
+
+				showLoading("正在应用配置...");
+
+				try {
+					const response = await fetch("/api/apply_config_to_remaining", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ channel_config: channelConfig }),
+					});
+					const data = await response.json();
+
+					if (data.status === "ok") {
+						showToast(
+							`配置已应用到 ${data.applied_to} 个未导出文件`,
+							"success"
+						);
+					} else {
+						showToast("应用失败: " + (data.error || "未知错误"), "error");
+					}
+				} catch (e) {
+					showToast("应用配置失败", "error");
+				}
+
+				hideLoading();
+			}
+
+			async function exportAllAudio() {
+				if (!confirm("确定要导出所有音频文件吗？\n这可能需要一些时间。"))
+					return;
+
+				showLoading("正在导出所有音频文件...");
+
+				try {
+					const response = await fetch("/api/export_all", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+					});
+					const data = await response.json();
+
+					if (data.status === "ok") {
+						let successCount = data.results.filter(
+							(r) => r.status === "ok"
+						).length;
+						let skipCount = data.results.filter(
+							(r) => r.status === "already_exported"
+						).length;
+						let errorResults = data.results.filter((r) => r.status === "error");
+						let errorCount = errorResults.length;
+
+						const statusResponse = await fetch("/api/status");
+						const statusData = await statusResponse.json();
+						audioFiles = statusData.audio_files || [];
+						renderAudioFilesList();
+
+						showToast(
+							`导出完成: ${successCount} 成功, ${skipCount} 已跳过, ${errorCount} 失败`,
+							errorCount > 0 ? "warning" : "success"
+						);
+
+						if (errorCount > 0) {
+							let errorDetails = errorResults
+								.map((r) => `${r.name}: ${r.error || "未知错误"}`)
+								.join("\n");
+							alert("以下文件导出失败：\n\n" + errorDetails);
+						}
+
+						if (data.all_exported) {
+							setTimeout(() => {
+								alert("所有音频已导出完成！程序将自动关闭。");
+								const deleteTemp = confirm(
+									"是否删除分离的临时音频文件？\n选择[确定]删除，选择[取消]保留。"
+								);
+								fetch("/api/shutdown", {
+									method: "POST",
+									headers: { "Content-Type": "application/json" },
+									body: JSON.stringify({ delete_temp: deleteTemp }),
+								});
+								window.close();
+							}, 1000);
+						}
+					} else {
+						showToast("导出失败: " + (data.error || "未知错误"), "error");
+					}
+				} catch (e) {
+					showToast("导出失败: " + e.message, "error");
+				}
+
+				hideLoading();
+			}
+
+			async function resetToServerDefault() {
+				if (!confirm("确定要重置为服务器端默认配置吗？\n当前的修改将会丢失。"))
+					return;
+
+				showLoading("正在重置...");
+				stopAudio();
+
+				try {
+					const response = await fetch("/api/reset_to_default", {
+						method: "POST",
+					});
+					const data = await response.json();
+
+					if (data.status === "ok") {
+						channelConfig = data.channel_config;
+						defaultChannelConfig = JSON.parse(
+							JSON.stringify(data.channel_config)
+						);
+
+						channelMuted = {};
+						channelSolo = {};
+
+						currentConfigSlot = null;
+						updateCurrentSlotIndicator();
+
+						renderChannelLayout();
+						updateSurroundDiagramState();
+						await generatePreview();
+
+						showToast("已重置为默认配置", "success");
+					} else {
+						showToast("重置失败", "error");
+					}
+				} catch (e) {
+					showToast("重置失败", "error");
+				}
+
+				hideLoading();
+			}
+
+			function renderSurroundDiagram() {
+				const diagram = document.getElementById("surroundDiagram");
+				const channelNames =
+					channelCount === 5 ? channelNames51 : channelNames71;
+
+				diagram.querySelectorAll(".speaker-icon").forEach((el) => el.remove());
+
+				for (const [key, info] of Object.entries(channelNames)) {
+					const icon = document.createElement("div");
+					icon.className = `speaker-icon ${info.class}`;
+					icon.textContent = info.abbr;
+					icon.dataset.channel = key;
+					icon.title = info.name;
+					icon.addEventListener("click", () => toggleChannelSolo(key));
+					diagram.appendChild(icon);
+				}
+			}
+
+			async function switchChannelMode(newChannelCount) {
+				newChannelCount = parseInt(newChannelCount);
+				if (newChannelCount === channelCount) return;
+
+				if (
+					!confirm(
+						`确定要切换到 ${newChannelCount}.1 声道模式吗？\n当前的配置将被重置为新模式的默认配置。`
+					)
+				) {
+					document.getElementById("channelModeSelect").value = channelCount;
+					return;
+				}
+
+				showLoading("正在切换声道模式...");
+				stopAudio();
+
+				try {
+					const response = await fetch("/api/switch_channel_mode", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ channel_count: newChannelCount }),
+					});
+
+					const data = await response.json();
+					if (data.status === "ok") {
+						channelCount = newChannelCount;
+						channelConfig = data.channel_config;
+						serverDefaultConfig = JSON.parse(
+							JSON.stringify(data.default_config)
+						);
+						defaultChannelConfig = JSON.parse(
+							JSON.stringify(data.channel_config)
+						);
+
+						channelMuted = {};
+						channelSolo = {};
+
+						currentConfigSlot = null;
+						updateCurrentSlotIndicator();
+
+						initConfigSlots();
+
+						renderChannelLayout();
+						renderSurroundDiagram();
+
+						await generatePreview();
+
+						showToast(`已切换到 ${newChannelCount}.1 声道模式`, "success");
+					} else {
+						showToast("切换失败: " + (data.error || "未知错误"), "error");
+						document.getElementById("channelModeSelect").value = channelCount;
+					}
+				} catch (e) {
+					showToast("切换失败", "error");
+					document.getElementById("channelModeSelect").value = channelCount;
+				}
+
+				hideLoading();
+			}
+
+			function renderChannelLayout() {
+				const layout = document.getElementById("channelLayout");
+				layout.innerHTML = "";
+
+				const channelNames =
+					channelCount === 5 ? channelNames51 : channelNames71;
+
+				const channelOrder51 = [
+					"center",
+					"left_front",
+					"left_surround",
+					"lfe",
+					"right_front",
+					"right_surround",
+				];
+				const channelOrder71 = [
+					"center",
+					"left_front",
+					"left_surround",
+					"rear_left_surround",
+					"lfe",
+					"right_front",
+					"right_surround",
+					"rear_right_surround",
+				];
+				const channelOrder =
+					channelCount === 5 ? channelOrder51 : channelOrder71;
+
+				for (const channelKey of channelOrder) {
+					const config = channelConfig[channelKey];
+					if (!config) continue;
+
+					const card = document.createElement("div");
+					card.className = "channel-card";
+					card.id = `channel-${channelKey}`;
+
+					const channelInfo = channelNames[channelKey] || { name: channelKey };
+
+					const isMuted = channelMuted[channelKey] || false;
+					const isSolo = channelSolo[channelKey] || false;
+
+					let sourcesHtml = "";
+					for (let i = 0; i < config.sources.length; i++) {
+						const source = config.sources[i];
+						const sourceName = sourceNames[source.source] || source.source;
+						const channelType =
+							channelTypeNames[source.channel] || source.channel;
+						const displayVolume =
+							isMuted && source._originalVolume !== undefined
+								? Math.round(source._originalVolume * 100)
+								: Math.round(source.volume * 100);
+
+						sourcesHtml += `
+			                     <div class="source-item">
+			                         <div class="source-header">
+			                             <span class="source-name">${sourceName}</span>
+			                             <span class="source-channel-type">${channelType}</span>
+			                         </div>
+			                         <div class="volume-control">
+			                             <input type="range" class="volume-slider"
+			                                 min="0" max="200" value="${displayVolume}"
+			                                 data-channel="${channelKey}" data-source-index="${i}"
+			                                 oninput="updateSourceVolume(this)"
+			                                 ${isMuted ? "disabled" : ""}>
+			                             <div class="volume-input-wrapper">
+			                                 <input type="number" class="volume-input"
+			                                     min="0" max="200" value="${displayVolume}"
+			                                     data-channel="${channelKey}" data-source-index="${i}"
+			                                     oninput="updateSourceVolumeFromInput(this)"
+			                                     onblur="clampSourceVolumeInput(this)"
+			                                     ${isMuted ? "disabled" : ""}>%
+			                             </div>
+			                         </div>
+			                     </div>
+			                 `;
+					}
+
+					card.innerHTML = `
+								 <div class="channel-controls">
+									 <span class="channel-name">${formatVerticalChannelName(
+											channelInfo.name
+										)}</span>
+									 <div class="channel-buttons">
+										 <button class="channel-reset" data-channel="${channelKey}" onclick="resetChannel('${channelKey}')" title="重置此声道">
+											 ↺
+										 </button>
+										 <button class="channel-solo ${
+												isSolo ? "active" : ""
+											}" data-channel="${channelKey}" onclick="toggleChannelSolo('${channelKey}')" title="独奏">
+											 S
+										 </button>
+										 <button class="channel-mute ${
+												isMuted ? "muted" : ""
+											}" data-channel="${channelKey}" onclick="toggleChannelMute('${channelKey}')" title="静音">
+											 M
+										 </button>
+									 </div>
+								 </div>
+								 <div class="sources-list">
+									 ${sourcesHtml}
+								 </div>
+							 `;
+					layout.appendChild(card);
+				}
+			}
+
+			function resetChannel(channelKey) {
+				if (defaultChannelConfig[channelKey]) {
+					const wasMuted = channelMuted[channelKey];
+					const wasSolo = channelSolo[channelKey];
+
+					channelConfig[channelKey] = JSON.parse(
+						JSON.stringify(defaultChannelConfig[channelKey])
+					);
+
+					if (wasMuted) {
+						channelConfig[channelKey].sources.forEach((source) => {
+							source._originalVolume = source.volume;
+							source.volume = 0;
+						});
+					}
+
+					const soloChannel = Object.keys(channelSolo).find(
+						(k) => channelSolo[k]
+					);
+					if (soloChannel && soloChannel !== channelKey) {
+						channelConfig[channelKey]._soloMuted = true;
+						channelConfig[channelKey].sources.forEach((source) => {
+							source._soloOriginalVolume = source.volume;
+							source.volume = 0;
+						});
+					}
+
+					renderChannelLayout();
+					updateSurroundDiagramState();
+					schedulePreviewUpdate();
+					showToast(
+						`已重置 ${
+							channelNames51[channelKey]?.name ||
+							channelNames71[channelKey]?.name ||
+							channelKey
+						} 的音量配置`,
+						"info"
+					);
+				}
+			}
+
+			function updateSurroundDiagramState() {
+				const channelNames =
+					channelCount === 5 ? channelNames51 : channelNames71;
+				for (const [key, info] of Object.entries(channelNames)) {
+					const icon = document.querySelector(
+						`.speaker-icon[data-channel="${key}"]`
+					);
+					if (icon) {
+						icon.classList.toggle("muted", !!channelMuted[key]);
+						icon.classList.toggle("active", !!channelSolo[key]);
+					}
+				}
+			}
+
+			function updateSourceVolume(slider) {
+				const channelKey = slider.dataset.channel;
+				const sourceIndex = parseInt(slider.dataset.sourceIndex);
+				const volume = slider.value / 100;
+
+				channelConfig[channelKey].sources[sourceIndex].volume = volume;
+				const wrapper = slider.nextElementSibling;
+				const input = wrapper.querySelector(".volume-input");
+				if (input) input.value = slider.value;
+
+				schedulePreviewUpdate();
+			}
+
+			function updateSourceVolumeFromInput(input) {
+				const channelKey = input.dataset.channel;
+				const sourceIndex = parseInt(input.dataset.sourceIndex);
+				let value = parseInt(input.value) || 0;
+				value = Math.max(0, Math.min(200, value));
+				const volume = value / 100;
+
+				channelConfig[channelKey].sources[sourceIndex].volume = volume;
+				const wrapper = input.parentElement;
+				const slider = wrapper.previousElementSibling;
+				if (slider) slider.value = value;
+
+				schedulePreviewUpdate();
+			}
+
+			function clampSourceVolumeInput(input) {
+				let value = parseInt(input.value) || 0;
+				value = Math.max(0, Math.min(200, value));
+				input.value = value;
+			}
+
+			function schedulePreviewUpdate() {
+				if (previewDebounceTimer) {
+					clearTimeout(previewDebounceTimer);
+				}
+				previewDebounceTimer = setTimeout(() => {
+					generatePreviewSilent();
+				}, 500);
+			}
+
+			async function generatePreviewSilent() {
+				if (isGeneratingPreview) return;
+				isGeneratingPreview = true;
+
+				const wasPlaying = isPlaying;
+				const currentTime = audioPlayer.currentTime;
+
+				try {
+					const response = await fetch("/api/preview", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ channel_config: channelConfig }),
+					});
+
+					const data = await response.json();
+
+					if (data.status === "ok") {
+						audioPlayer.src = data.preview_url + "?t=" + Date.now();
+
+						const masterVolumeSlider = document.getElementById("masterVolume");
+						audioPlayer.volume = parseInt(masterVolumeSlider.value) / 100;
+
+						audioPlayer.load();
+
+						audioPlayer.addEventListener("loadedmetadata", function onLoaded() {
+							audioPlayer.currentTime = Math.min(
+								currentTime,
+								audioPlayer.duration || 0
+							);
+							if (wasPlaying) {
+								audioPlayer.play();
+							}
+							audioPlayer.removeEventListener("loadedmetadata", onLoaded);
+						});
+
+						document.getElementById("btnPlay").disabled = false;
+						document.getElementById("btnPause").disabled = false;
+						document.getElementById("btnStop").disabled = false;
+					}
+				} catch (e) {
+					console.error("更新预览失败", e);
+				}
+
+				isGeneratingPreview = false;
+			}
+
+			function toggleChannelMute(channelKey) {
+				channelMuted[channelKey] = !channelMuted[channelKey];
+
+				if (channelMuted[channelKey]) {
+					channelConfig[channelKey].sources.forEach((source, i) => {
+						source._originalVolume = source.volume;
+						source.volume = 0;
+					});
+				} else {
+					channelConfig[channelKey].sources.forEach((source, i) => {
+						if (source._originalVolume !== undefined) {
+							source.volume = source._originalVolume;
+							delete source._originalVolume;
+						}
+					});
+				}
+
+				renderChannelLayout();
+				updateSurroundDiagramState();
+				schedulePreviewUpdate();
+			}
+
+			function toggleChannelSolo(channelKey) {
+				const wasActive = channelSolo[channelKey];
+				const allChannelKeys = Object.keys(channelConfig);
+
+				if (wasActive) {
+					channelSolo = {};
+
+					allChannelKeys.forEach((key) => {
+						if (channelConfig[key]._soloMuted) {
+							channelConfig[key].sources.forEach((source) => {
+								if (source._soloOriginalVolume !== undefined) {
+									source.volume = source._soloOriginalVolume;
+									delete source._soloOriginalVolume;
+								}
+							});
+							delete channelConfig[key]._soloMuted;
+						}
+					});
+				} else {
+					allChannelKeys.forEach((key) => {
+						if (channelConfig[key]._soloMuted) {
+							channelConfig[key].sources.forEach((source) => {
+								if (source._soloOriginalVolume !== undefined) {
+									source.volume = source._soloOriginalVolume;
+									delete source._soloOriginalVolume;
+								}
+							});
+							delete channelConfig[key]._soloMuted;
+						}
+					});
+
+					channelSolo = {};
+					channelSolo[channelKey] = true;
+
+					allChannelKeys.forEach((key) => {
+						if (key !== channelKey) {
+							channelConfig[key]._soloMuted = true;
+							channelConfig[key].sources.forEach((source) => {
+								source._soloOriginalVolume = source.volume;
+								source.volume = 0;
+							});
+						}
+					});
+				}
+
+				renderChannelLayout();
+				updateSurroundDiagramState();
+				schedulePreviewUpdate();
+			}
+
+			async function generatePreview() {
+				showLoading("正在生成预览音频...");
+
+				try {
+					const response = await fetch("/api/preview", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ channel_config: channelConfig }),
+					});
+
+					const data = await response.json();
+
+					if (data.status === "ok") {
+						audioPlayer.src = data.preview_url + "?t=" + Date.now();
+
+						const masterVolumeSlider = document.getElementById("masterVolume");
+						audioPlayer.volume = parseInt(masterVolumeSlider.value) / 100;
+
+						audioPlayer.load();
+
+						document.getElementById("btnPlay").disabled = false;
+						document.getElementById("btnPause").disabled = false;
+						document.getElementById("btnStop").disabled = false;
+
+						showToast("预览音频已生成", "success");
+					} else {
+						showToast("生成预览失败: " + data.error, "error");
+					}
+				} catch (e) {
+					showToast("生成预览失败", "error");
+				}
+
+				hideLoading();
+			}
+
+			function playAudio() {
+				audioPlayer.play();
+				isPlaying = true;
+				updatePlaybackButtons();
+			}
+
+			function pauseAudio() {
+				audioPlayer.pause();
+				isPlaying = false;
+				updatePlaybackButtons();
+			}
+
+			function stopAudio() {
+				audioPlayer.pause();
+				audioPlayer.currentTime = 0;
+				isPlaying = false;
+				updatePlaybackButtons();
+			}
+
+			function seekAudio(e) {
+				if (audioPlayer.duration) {
+					const rect = e.target.getBoundingClientRect();
+					const percent = (e.clientX - rect.left) / rect.width;
+					audioPlayer.currentTime = audioPlayer.duration * percent;
+				}
+			}
+
+			function updateProgress() {
+				const current = audioPlayer.currentTime;
+				const duration = audioPlayer.duration || 0;
+
+				const percent = duration > 0 ? (current / duration) * 100 : 0;
+				document.getElementById("progressFill").style.width = percent + "%";
+
+				document.getElementById("timeDisplay").textContent =
+					formatTime(current) + " / " + formatTime(duration);
+			}
+
+			function formatTime(seconds) {
+				const mins = Math.floor(seconds / 60);
+				const secs = Math.floor(seconds % 60);
+				return (
+					mins.toString().padStart(2, "0") +
+					":" +
+					secs.toString().padStart(2, "0")
+				);
+			}
+
+			function updatePlaybackButtons() {
+				document.getElementById("btnPlay").textContent = isPlaying
+					? "▶️ 播放中"
+					: "▶️ 播放";
+			}
+
+			function updateCurrentSlotIndicator() {
+				const indicator = document.getElementById("currentSlotIndicator");
+				if (!indicator) return;
+
+				const prefix = getSlotPrefix();
+
+				if (currentConfigSlot === null) {
+					indicator.textContent = `当前: 未保存的配置 (${channelCount}.1)`;
+					indicator.style.color = "#999";
+				} else {
+					const slotName =
+						localStorage.getItem(
+							`mixerSlotName_${prefix}_${currentConfigSlot}`
+						) || `配置 ${currentConfigSlot}`;
+					indicator.textContent = `当前: ${slotName} (${channelCount}.1)`;
+					indicator.style.color = "#4fc3f7";
+				}
+			}
+
+			async function resetConfig() {
+				const prefix = getSlotPrefix();
+				let confirmMsg = "确定要将所有声道重置为当前配置吗？";
+				if (currentConfigSlot !== null) {
+					const slotName =
+						localStorage.getItem(
+							`mixerSlotName_${prefix}_${currentConfigSlot}`
+						) || `配置 ${currentConfigSlot}`;
+					confirmMsg = `确定要将所有声道重置为配置槽「${slotName}」的设置吗？`;
+				}
+
+				if (confirm(confirmMsg)) {
+					showLoading("正在重置...");
+
+					stopAudio();
+
+					channelConfig = JSON.parse(JSON.stringify(defaultChannelConfig));
+
+					channelMuted = {};
+					channelSolo = {};
+
+					renderChannelLayout();
+					updateSurroundDiagramState();
+					await generatePreview();
+
+					hideLoading();
+
+					if (currentConfigSlot !== null) {
+						const slotName =
+							localStorage.getItem(
+								`mixerSlotName_${prefix}_${currentConfigSlot}`
+							) || `配置 ${currentConfigSlot}`;
+						showToast(`已重置为「${slotName}」`, "info");
+					} else {
+						showToast("已重置为当前配置", "info");
+					}
+				}
+			}
+
+			function saveCurrentConfig() {
+				const configToSave = JSON.parse(JSON.stringify(channelConfig));
+
+				for (const channelKey in configToSave) {
+					delete configToSave[channelKey]._soloMuted;
+					configToSave[channelKey].sources.forEach((source) => {
+						if (source._originalVolume !== undefined) {
+							source.volume = source._originalVolume;
+							delete source._originalVolume;
+						}
+						if (source._soloOriginalVolume !== undefined) {
+							source.volume = source._soloOriginalVolume;
+							delete source._soloOriginalVolume;
+						}
+					});
+				}
+
+				defaultChannelConfig = configToSave;
+			}
+
+			function getSlotPrefix() {
+				return channelCount === 5 ? "51" : "71";
+			}
+
+			function initConfigSlots() {
+				const prefix = getSlotPrefix();
+
+				const modeLabel = document.getElementById("configSlotModeLabel");
+				if (modeLabel) {
+					modeLabel.textContent = channelCount === 5 ? "5.1 声道" : "7.1 声道";
+				}
+
+				for (let i = 1; i <= 3; i++) {
+					const slotKey = `mixerConfigSlot_${prefix}_${i}`;
+					const nameKey = `mixerSlotName_${prefix}_${i}`;
+
+					const savedName = localStorage.getItem(nameKey);
+					if (savedName) {
+						document.getElementById(`slotName${i}`).value = savedName;
+					} else {
+						document.getElementById(`slotName${i}`).value = `配置 ${i}`;
+					}
+
+					const savedConfig = localStorage.getItem(slotKey);
+					if (savedConfig) {
+						document.getElementById(`configSlot${i}`).classList.add("has-data");
+						document.getElementById(`loadBtn${i}`).disabled = false;
+					} else {
+						document
+							.getElementById(`configSlot${i}`)
+							.classList.remove("has-data");
+						document.getElementById(`loadBtn${i}`).disabled = true;
+					}
+				}
+
+				updateCurrentSlotIndicator();
+			}
+
+			function saveSlotName(slotNum, name) {
+				const prefix = getSlotPrefix();
+				localStorage.setItem(`mixerSlotName_${prefix}_${slotNum}`, name);
+			}
+
+			function getCleanConfigForSave() {
+				const configToSave = JSON.parse(JSON.stringify(channelConfig));
+
+				for (const channelKey in configToSave) {
+					delete configToSave[channelKey]._soloMuted;
+					configToSave[channelKey].sources.forEach((source) => {
+						if (source._originalVolume !== undefined) {
+							source.volume = source._originalVolume;
+							delete source._originalVolume;
+						}
+						if (source._soloOriginalVolume !== undefined) {
+							source.volume = source._soloOriginalVolume;
+							delete source._soloOriginalVolume;
+						}
+					});
+				}
+
+				return configToSave;
+			}
+
+			function saveToSlot(slotNum) {
+				const prefix = getSlotPrefix();
+				const slotName =
+					document.getElementById(`slotName${slotNum}`).value ||
+					`配置 ${slotNum}`;
+
+				if (
+					confirm(
+						`确定要将当前配置保存到「${slotName}」吗？\n（注意：静音和独奏状态不会被保存）`
+					)
+				) {
+					const configToSave = getCleanConfigForSave();
+
+					const slotKey = `mixerConfigSlot_${prefix}_${slotNum}`;
+					localStorage.setItem(slotKey, JSON.stringify(configToSave));
+
+					saveSlotName(slotNum, slotName);
+
+					currentConfigSlot = slotNum;
+					defaultChannelConfig = JSON.parse(JSON.stringify(configToSave));
+					updateCurrentSlotIndicator();
+
+					document
+						.getElementById(`configSlot${slotNum}`)
+						.classList.add("has-data");
+					document.getElementById(`loadBtn${slotNum}`).disabled = false;
+
+					showToast(
+						`配置已保存到「${slotName}」(${channelCount}.1)`,
+						"success"
+					);
+				}
+			}
+
+			async function loadFromSlot(slotNum) {
+				const prefix = getSlotPrefix();
+				const slotKey = `mixerConfigSlot_${prefix}_${slotNum}`;
+				const savedConfig = localStorage.getItem(slotKey);
+
+				if (!savedConfig) {
+					showToast("该槽位没有保存的配置", "error");
+					return;
+				}
+
+				const slotName =
+					document.getElementById(`slotName${slotNum}`).value ||
+					`配置 ${slotNum}`;
+
+				if (
+					confirm(
+						`确定要加载「${slotName}」的配置吗？\n当前未保存的更改将会丢失。`
+					)
+				) {
+					showLoading("正在加载配置...");
+
+					stopAudio();
+
+					try {
+						channelConfig = JSON.parse(savedConfig);
+
+						currentConfigSlot = slotNum;
+						defaultChannelConfig = JSON.parse(JSON.stringify(channelConfig));
+						updateCurrentSlotIndicator();
+
+						channelMuted = {};
+						channelSolo = {};
+
+						renderChannelLayout();
+						updateSurroundDiagramState();
+						await generatePreview();
+
+						showToast(`已加载「${slotName}」的配置`, "success");
+					} catch (e) {
+						showToast("加载配置失败：配置数据损坏", "error");
+					}
+
+					hideLoading();
+				}
+			}
+
+			async function exportAudio() {
+				const currentFile = audioFiles[currentAudioIndex];
+				const fileName = currentFile ? currentFile.name : "当前音频";
+
+				if (
+					!confirm(
+						`确定要导出「${fileName}」的混音吗？\n（注意：独奏和静音状态仅用于预览，导出时将使用设置的实际音量）`
+					)
+				)
+					return;
+
+				showLoading("正在导出混音文件...");
+
+				try {
+					const cleanConfig = getCleanConfigForSave();
+
+					const response = await fetch("/api/export", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ channel_config: cleanConfig }),
+					});
+
+					const data = await response.json();
+
+					if (data.status === "ok") {
+						showToast("导出成功: " + data.output_file, "success");
+
+						if (isMultiFileMode) {
+							const statusResponse = await fetch("/api/status");
+							const statusData = await statusResponse.json();
+							audioFiles = statusData.audio_files || [];
+							renderAudioFilesList();
+
+							if (data.all_exported) {
+								setTimeout(() => {
+									alert("所有音频已导出完成！程序将自动关闭。");
+									const deleteTemp = confirm(
+										"是否删除分离的临时音频文件？\n选择[确定]删除，选择[取消]保留。"
+									);
+									fetch("/api/shutdown", {
+										method: "POST",
+										headers: { "Content-Type": "application/json" },
+										body: JSON.stringify({ delete_temp: deleteTemp }),
+									});
+									window.close();
+								}, 1000);
+							} else {
+								setTimeout(() => {
+									if (currentAudioIndex < audioFiles.length - 1) {
+										if (confirm("是否继续编辑下一个音频文件？")) {
+											navigateAudio(1);
+										}
+									}
+								}, 500);
+							}
+						} else {
+							setTimeout(() => {
+								alert("混音已导出完成！程序将自动关闭。");
+								const deleteTemp = confirm(
+									"是否删除分离的临时音频文件？\n选择[确定]删除，选择[取消]保留。"
+								);
+								fetch("/api/shutdown", {
+									method: "POST",
+									headers: { "Content-Type": "application/json" },
+									body: JSON.stringify({ delete_temp: deleteTemp }),
+								});
+								window.close();
+							}, 1000);
+						}
+					} else {
+						showToast("导出失败: " + (data.error || "未知错误"), "error");
+						if (data.error) {
+							alert("导出失败\n\n详细信息：\n" + data.error);
+						}
+					}
+				} catch (e) {
+					showToast("导出失败: " + e.message, "error");
+				}
+
+				hideLoading();
+			}
+
+			function showLoading(text) {
+				document.getElementById("loadingText").textContent = text;
+				document.getElementById("loadingOverlay").classList.add("active");
+			}
+
+			function hideLoading() {
+				document.getElementById("loadingOverlay").classList.remove("active");
+			}
+
+			function showToast(message, type = "info") {
+				const toast = document.getElementById("toast");
+				toast.textContent = message;
+				toast.className = "toast " + type + " show";
+
+				setTimeout(() => {
+					toast.classList.remove("show");
+				}, 3000);
+			}
+		</script>
+	</body>
+</html>

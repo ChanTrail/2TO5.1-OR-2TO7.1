@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>立体声转5.1&7.1声道混音工具 Web GUI - 设置</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+				background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+				color: #fff;
+				min-height: 100vh;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 20px;
+			}
+
+			.setup-container {
+				max-width: 600px;
+				width: 100%;
+				background: rgba(255, 255, 255, 0.05);
+				border-radius: 20px;
+				padding: 40px;
+				box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+			}
+
+			header {
+				text-align: center;
+				margin-bottom: 40px;
+			}
+
+			header h1 {
+				font-size: 2em;
+				color: #00d4ff;
+				text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+				margin-bottom: 10px;
+			}
+
+			header p {
+				color: #888;
+				font-size: 0.95em;
+			}
+
+			.setup-section {
+				margin-bottom: 30px;
+			}
+
+			.setup-section h3 {
+				color: #00d4ff;
+				margin-bottom: 15px;
+				font-size: 1.1em;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.option-cards {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 15px;
+			}
+
+			.option-card {
+				background: rgba(255, 255, 255, 0.08);
+				border: 2px solid transparent;
+				border-radius: 12px;
+				padding: 20px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				text-align: center;
+			}
+
+			.option-card:hover {
+				background: rgba(255, 255, 255, 0.12);
+				border-color: rgba(0, 212, 255, 0.3);
+			}
+
+			.option-card.selected {
+				border-color: #00d4ff;
+				background: rgba(0, 212, 255, 0.1);
+				box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+			}
+
+			.option-card .icon {
+				font-size: 2.5em;
+				margin-bottom: 10px;
+			}
+
+			.option-card .title {
+				font-size: 1.1em;
+				font-weight: bold;
+				margin-bottom: 5px;
+			}
+
+			.option-card .desc {
+				color: #888;
+				font-size: 0.85em;
+			}
+
+			.dir-selector {
+				background: rgba(255, 255, 255, 0.08);
+				border-radius: 12px;
+				padding: 20px;
+				margin-bottom: 15px;
+			}
+
+			.dir-selector label {
+				display: block;
+				color: #aaa;
+				margin-bottom: 8px;
+				font-size: 0.9em;
+			}
+
+			.dir-selector .dir-row {
+				display: flex;
+				gap: 10px;
+			}
+
+			.dir-selector input {
+				flex: 1;
+				padding: 12px 15px;
+				border: 1px solid rgba(255, 255, 255, 0.2);
+				border-radius: 8px;
+				background: rgba(0, 0, 0, 0.3);
+				color: #fff;
+				font-size: 0.95em;
+			}
+
+			.dir-selector input:read-only {
+				cursor: default;
+			}
+
+			.btn {
+				padding: 12px 24px;
+				border: none;
+				border-radius: 8px;
+				cursor: pointer;
+				font-size: 1em;
+				transition: all 0.3s ease;
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			.btn-browse {
+				background: rgba(255, 255, 255, 0.15);
+				color: #fff;
+			}
+
+			.btn-browse:hover {
+				background: rgba(255, 255, 255, 0.25);
+			}
+
+			.btn-start {
+				width: 100%;
+				padding: 18px;
+				font-size: 1.2em;
+				background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+				color: #fff;
+				font-weight: bold;
+				margin-top: 20px;
+			}
+
+			.btn-start:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
+			}
+
+			.btn-start:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+				transform: none;
+				box-shadow: none;
+			}
+
+			.status-text {
+				text-align: center;
+				color: #888;
+				margin-top: 15px;
+				font-size: 0.9em;
+			}
+
+			.status-text.error {
+				color: #ff6b6b;
+			}
+
+			.status-text.success {
+				color: #51cf66;
+			}
+
+			.loading-overlay {
+				display: none;
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.8);
+				z-index: 1000;
+				justify-content: center;
+				align-items: center;
+				flex-direction: column;
+			}
+
+			.loading-overlay.show {
+				display: flex;
+			}
+
+			.spinner {
+				width: 60px;
+				height: 60px;
+				border: 4px solid rgba(0, 212, 255, 0.2);
+				border-top-color: #00d4ff;
+				border-radius: 50%;
+				animation: spin 1s linear infinite;
+				margin-bottom: 20px;
+			}
+
+			@keyframes spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+
+			.loading-text {
+				color: #fff;
+				font-size: 1.1em;
+			}
+
+			.progress-info {
+				color: #888;
+				font-size: 0.9em;
+				margin-top: 10px;
+			}
+
+			.progress-bar-container {
+				width: 300px;
+				height: 8px;
+				background: rgba(255, 255, 255, 0.1);
+				border-radius: 4px;
+				margin-top: 15px;
+				overflow: hidden;
+			}
+
+			.progress-bar {
+				height: 100%;
+				background: linear-gradient(90deg, #00d4ff 0%, #0099cc 100%);
+				border-radius: 4px;
+				transition: width 0.3s ease;
+				width: 0%;
+			}
+
+			.progress-percent {
+				color: #00d4ff;
+				font-size: 1.1em;
+				margin-top: 10px;
+				font-weight: bold;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="setup-container">
+			<header>
+				<h1>🎵 立体声转5.1&7.1声道混音工具 Web GUI</h1>
+				<p>立体声转 5.1/7.1 声道 v3.0.0 by ChanTrail</p>
+			</header>
+
+			<div class="setup-section">
+				<h3>⚡ 处理模式</h3>
+				<div class="option-cards">
+					<div
+						class="option-card selected"
+						data-value="1"
+						onclick="selectOption('hardware', '1', this)"
+					>
+						<div class="icon">🖥️</div>
+						<div class="title">GPU</div>
+						<div class="desc">3G 以上显存推荐</div>
+					</div>
+					<div
+						class="option-card"
+						data-value="2"
+						onclick="selectOption('hardware', '2', this)"
+					>
+						<div class="icon">💻</div>
+						<div class="title">CPU</div>
+						<div class="desc">无显卡时使用</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="setup-section">
+				<h3>🔊 声道模式</h3>
+				<div class="option-cards">
+					<div
+						class="option-card selected"
+						data-value="1"
+						onclick="selectOption('channel', '1', this)"
+					>
+						<div class="icon">5.1</div>
+						<div class="title">5.1 声道</div>
+						<div class="desc">6 声道环绕</div>
+					</div>
+					<div
+						class="option-card"
+						data-value="2"
+						onclick="selectOption('channel', '2', this)"
+					>
+						<div class="icon">7.1</div>
+						<div class="title">7.1 声道</div>
+						<div class="desc">8 声道环绕</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="setup-section">
+				<h3>
+					📁 目录设置
+					<span style="font-size: 0.8em; color: #888; font-weight: normal"
+						>(可直接输入路径或点击浏览)</span
+					>
+				</h3>
+				<div class="dir-selector">
+					<label>输入目录（音频文件所在目录）</label>
+					<div class="dir-row">
+						<input
+							type="text"
+							id="inputDir"
+							placeholder="输入路径或点击浏览选择目录..."
+							oninput="onDirInput('input')"
+						/>
+						<button class="btn btn-browse" onclick="browseDir('input')">
+							📂 浏览
+						</button>
+					</div>
+				</div>
+				<div class="dir-selector">
+					<label>输出目录（混音文件保存位置）</label>
+					<div class="dir-row">
+						<input
+							type="text"
+							id="outputDir"
+							placeholder="输入路径或点击浏览选择目录..."
+							oninput="onDirInput('output')"
+						/>
+						<button class="btn btn-browse" onclick="browseDir('output')">
+							📂 浏览
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<button
+				class="btn btn-start"
+				id="btnStart"
+				onclick="startProcessing()"
+				disabled
+			>
+				🚀 开始处理
+			</button>
+
+			<p class="status-text" id="statusText">请选择输入和输出目录</p>
+		</div>
+
+		<div class="loading-overlay" id="loadingOverlay">
+			<div class="spinner"></div>
+			<div class="loading-text" id="loadingText">正在处理...</div>
+			<div
+				class="progress-bar-container"
+				id="progressBarContainer"
+				style="display: none"
+			>
+				<div class="progress-bar" id="progressBar"></div>
+			</div>
+			<div
+				class="progress-percent"
+				id="progressPercent"
+				style="display: none"
+			></div>
+			<div class="progress-info" id="progressInfo"></div>
+		</div>
+
+		<script>
+			const config = {
+				hardware: "1",
+				channel: "1",
+				inputDir: "",
+				outputDir: "",
+			};
+
+			function selectOption(type, value, element) {
+				config[type] = value;
+
+				const parent = element.parentElement;
+				parent.querySelectorAll(".option-card").forEach((card) => {
+					card.classList.remove("selected");
+				});
+				element.classList.add("selected");
+
+				checkReady();
+			}
+
+			function onDirInput(type) {
+				if (type === "input") {
+					config.inputDir = document.getElementById("inputDir").value.trim();
+				} else {
+					config.outputDir = document.getElementById("outputDir").value.trim();
+				}
+				checkReady();
+			}
+
+			function browseDir(type) {
+				const btn = event.target;
+				btn.disabled = true;
+				btn.textContent = "选择中...";
+
+				fetch("/api/browse_dir", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ type: type }),
+				})
+					.then((res) => res.json())
+					.then((data) => {
+						btn.disabled = false;
+						btn.textContent = "📂 浏览";
+
+						if (data.error) {
+							console.error("浏览目录失败:", data.error);
+							alert(
+								"浏览目录失败: " +
+									data.error +
+									"\n\n您也可以直接在输入框中输入路径。"
+							);
+							return;
+						}
+
+						if (data.path) {
+							if (type === "input") {
+								config.inputDir = data.path;
+								document.getElementById("inputDir").value = data.path;
+							} else {
+								config.outputDir = data.path;
+								document.getElementById("outputDir").value = data.path;
+							}
+							checkReady();
+						}
+					})
+					.catch((err) => {
+						btn.disabled = false;
+						btn.textContent = "📂 浏览";
+						console.error("浏览目录失败:", err);
+						alert("浏览目录失败，请直接在输入框中输入路径。");
+					});
+			}
+
+			function checkReady() {
+				const ready = config.inputDir && config.outputDir;
+				document.getElementById("btnStart").disabled = !ready;
+
+				if (ready) {
+					document.getElementById("statusText").textContent =
+						"✓ 准备就绪，点击开始处理";
+					document.getElementById("statusText").className =
+						"status-text success";
+				} else {
+					document.getElementById("statusText").textContent =
+						"请选择输入和输出目录";
+					document.getElementById("statusText").className = "status-text";
+				}
+			}
+
+			function showLoading(text, progress) {
+				document.getElementById("loadingOverlay").classList.add("show");
+				document.getElementById("loadingText").textContent =
+					text || "正在处理...";
+				document.getElementById("progressInfo").textContent = progress || "";
+			}
+
+			function hideLoading() {
+				document.getElementById("loadingOverlay").classList.remove("show");
+			}
+
+			function startProcessing() {
+				showLoading("正在扫描音频文件...", "");
+
+				fetch("/api/start_processing", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(config),
+				})
+					.then((res) => res.json())
+					.then((data) => {
+						if (data.status === "ok") {
+							pollStatus();
+						} else if (data.status === "redirect") {
+							window.location.href = data.url;
+						} else {
+							hideLoading();
+							document.getElementById("statusText").textContent =
+								"❌ " + (data.error || "处理失败");
+							document.getElementById("statusText").className =
+								"status-text error";
+						}
+					})
+					.catch((err) => {
+						hideLoading();
+						document.getElementById("statusText").textContent =
+							"❌ 请求失败: " + err.message;
+						document.getElementById("statusText").className =
+							"status-text error";
+					});
+			}
+
+			function pollStatus() {
+				fetch("/api/processing_status")
+					.then((res) => res.json())
+					.then((data) => {
+						if (data.status === "processing") {
+							document.getElementById("loadingText").textContent =
+								data.message || "正在处理...";
+
+							const progress = data.progress;
+							if (progress !== undefined && progress !== null && progress > 0) {
+								document.getElementById("progressBarContainer").style.display =
+									"block";
+								document.getElementById("progressPercent").style.display =
+									"block";
+								document.getElementById("progressBar").style.width =
+									progress + "%";
+								document.getElementById("progressPercent").textContent =
+									progress + "%";
+							} else {
+								document.getElementById("progressBarContainer").style.display =
+									"none";
+								document.getElementById("progressPercent").style.display =
+									"none";
+							}
+
+							setTimeout(pollStatus, 500);
+						} else if (data.status === "ready") {
+							if (data.failed_files && data.failed_files.length > 0) {
+								let errorMsg =
+									"以下文件分离失败：\n\n" + data.failed_files.join("\n");
+								alert(errorMsg);
+							}
+							window.location.href = "/mixer";
+						} else if (data.status === "error") {
+							hideLoading();
+							let errorText = "❌ " + (data.message || "处理失败");
+							if (data.error) {
+								errorText += "\n\n详细信息：\n" + data.error;
+							}
+							document.getElementById("statusText").textContent = errorText;
+							document.getElementById("statusText").className =
+								"status-text error";
+							document.getElementById("statusText").style.whiteSpace =
+								"pre-wrap";
+						}
+					})
+					.catch((err) => {
+						setTimeout(pollStatus, 1000);
+					});
+			}
+		</script>
+	</body>
+</html>

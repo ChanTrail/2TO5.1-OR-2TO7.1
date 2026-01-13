@@ -1,14 +1,14 @@
 # 🎵 立体声转5.1&7.1声道混音工具
 
 <p align="center">
-  <strong>Web GUI 版本 v3.0.0</strong><br>
+  <strong>Web GUI 版本 v3.1.0</strong><br>
   <em>将普通立体声音频转换为沉浸式环绕声体验</em>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.1.0-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/python-3.12-green.svg" alt="Python">
-  <img src="https://img.shields.io/badge/license-MIT-orange.svg" alt="License">
+  <img src="https://img.shields.io/badge/license-GPL--3.0-orange.svg" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows-lightgrey.svg" alt="Platform">
 </p>
 
@@ -32,6 +32,7 @@
 
 ### 🔊 智能音频处理
 - **双模式转换**：支持 5.1 和 7.1 环绕声格式，可随时切换
+- **多模型支持**：可在设置页面切换不同的分离模型
 - **智能音频分离**：将音频分离为 7 个独立音轨（vocals, bass, drums, guitar, piano, instrumental, other）
 - **自定义声道配置**：自由调整每个声道的音源和音量
 - **配置槽功能**：保存和快速切换多组混音配置
@@ -64,23 +65,24 @@
 本程序提供整合包形式，已包含所有依赖项和 Python 环境，**无需额外安装**。
 
 下载并解压整合包
-[下载](https://github.com/CHEN-Technology/2TO5.1-OR-2TO7.1/releases/latest)
+[下载](https://github.com/ChanTrail/2TO5.1-OR-2TO7.1/releases/latest)
 
 
 ### 手动安装
 
 ```bash
 # 克隆仓库
-git clone https://github.com/CHEN-Technology/2TO5.1-OR-2TO7.1.git
+git clone https://github.com/ChanTrail/2TO5.1-OR-2TO7.1.git
 cd 2TO5.1-OR-2TO7.1
 
 # 安装依赖
-pip install -r requirements.txt
+.\Python\python -m pip install -r requirements.txt
 
-# 下载模型文件到 logic_bsroformer/models/
+# 下载模型文件到 bsroformer/models/
+# 下载模型配置文件到 bsroformer/configs/
 ```
-`logic_roformer.pt`
-- [HuggingFace 下载](https://huggingface.co/ChenTechnology/logic_bsroformer/resolve/main/logic_roformer.pt)
+`模型及配置文件下载`
+- [HuggingFace 下载](https://huggingface.co/ChanTrail/BS-RoFormer)
 ## 🚀 快速开始
 
 ### 方式一：双击启动
@@ -96,16 +98,18 @@ pip install -r requirements.txt
 ### 使用流程
 
 1. **启动程序** → 自动打开浏览器访问 Web GUI
-2. **选择配置**：
+2. **选择配置**（左侧面板）：
    - 处理模式：GPU（推荐）或 CPU
+   - 分离模型：选择要使用的 AI 模型
+3. **选择配置**（右侧面板）：
    - 声道模式：5.1 或 7.1
    - 输入/输出目录
-3. **开始处理** → 等待音频分离完成
-4. **调整混音**：
+4. **开始处理** → 等待音频分离完成
+5. **调整混音**：
    - 在混音器界面调整各声道配置
    - 实时预览混音效果
    - 保存常用配置到配置槽
-5. **导出文件** → 获得高质量环绕声音频
+6. **导出文件** → 获得高质量环绕声音频
 
 ## 📁 目录结构
 
@@ -113,10 +117,11 @@ pip install -r requirements.txt
 2TO5.1-OR-2TO7.1/           
 ├── main.py                 # 主程序入口
 ├── web_mixer.py            # Web GUI 服务器
+├── model.txt               # 模型配置文件
 ├── web_templates/          # Web 页面模板
 │   ├── setup.html          # 设置页面
 │   └── mixer.html          # 混音器页面
-├── logic_bsroformer/       # 音频分离模块
+├── bsroformer/       # 音频分离模块
 │   ├── inference.py        # 推理脚本
 │   ├── configs/            # 模型配置
 │   └── models/             # 模型文件 (需下载)
@@ -157,8 +162,8 @@ pip install -r requirements.txt
 │                    Web GUI (Flask)                       │
 ├─────────────────────────────────────────────────────────┤
 │  setup.html          │           mixer.html              │
-│  - 参数配置          │           - 声道混音配置          │
-│  - 目录选择          │           - 实时预览              │
+│  - 处理模式/模型选择  │           - 声道混音配置          │
+│  - 声道模式/目录    │           - 实时预览              │
 │  - 处理进度显示      │           - 配置槽管理            │
 └─────────────────────────────────────────────────────────┘
                               │
@@ -168,7 +173,8 @@ pip install -r requirements.txt
 ├─────────────────────────────────────────────────────────┤
 │  BS-RoFormer Model     │    PyDub + NumPy + SoundFile   │
 │  - 音频源分离          │    - 声道混音                   │
-│  - GPU/CPU 加速        │    - FLAC 编码                  │
+│  - 多模型支持          │    - FLAC 编码                  │
+│  - GPU/CPU 加速        │                                │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -241,6 +247,6 @@ FLAC 是无损压缩格式，可以：
 ---
 
 <p align="center">
-  <strong>立体声转5.1&7.1声道混音工具 v3.0.0</strong><br>
+  <strong>立体声转5.1&7.1声道混音工具 v3.1.0</strong><br>
   <em>by ChanTrail</em>
 </p>

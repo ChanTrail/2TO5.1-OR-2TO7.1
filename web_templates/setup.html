@@ -23,7 +23,7 @@
 			}
 
 			.setup-container {
-				max-width: 600px;
+				max-width: 1100px;
 				width: 100%;
 				background: rgba(255, 255, 255, 0.05);
 				border-radius: 20px;
@@ -48,8 +48,18 @@
 				font-size: 0.95em;
 			}
 
+			.setup-main {
+				display: flex;
+				gap: 30px;
+			}
+
+			.setup-left,
+			.setup-right {
+				flex: 1;
+			}
+
 			.setup-section {
-				margin-bottom: 30px;
+				margin-bottom: 25px;
 			}
 
 			.setup-section h3 {
@@ -272,101 +282,118 @@
 				<p>立体声转 5.1/7.1 声道 v3.0.0 by ChanTrail</p>
 			</header>
 
-			<div class="setup-section">
-				<h3>⚡ 处理模式</h3>
-				<div class="option-cards">
-					<div
-						class="option-card selected"
-						data-value="1"
-						onclick="selectOption('hardware', '1', this)"
-					>
-						<div class="icon">🖥️</div>
-						<div class="title">GPU</div>
-						<div class="desc">3G 以上显存推荐</div>
+			<div class="setup-main">
+				<div class="setup-left">
+					<div class="setup-section">
+						<h3>⚡ 处理模式</h3>
+						<div class="option-cards">
+							<div
+								class="option-card selected"
+								data-value="1"
+								onclick="selectOption('hardware', '1', this)"
+							>
+								<div class="icon">🖥️</div>
+								<div class="title">GPU</div>
+								<div class="desc">3G 以上显存推荐</div>
+							</div>
+							<div
+								class="option-card"
+								data-value="2"
+								onclick="selectOption('hardware', '2', this)"
+							>
+								<div class="icon">💻</div>
+								<div class="title">CPU</div>
+								<div class="desc">无显卡时使用</div>
+							</div>
+						</div>
 					</div>
-					<div
-						class="option-card"
-						data-value="2"
-						onclick="selectOption('hardware', '2', this)"
-					>
-						<div class="icon">💻</div>
-						<div class="title">CPU</div>
-						<div class="desc">无显卡时使用</div>
+
+					<div class="setup-section">
+						<h3>🧠 分离模型</h3>
+						<div class="option-cards" id="modelCards">
+							<div class="option-card selected" data-value="0">
+								<div class="icon">🎼</div>
+								<div class="title">加载中...</div>
+								<div class="desc">正在获取模型列表</div>
+							</div>
+						</div>
 					</div>
+				</div>
+
+				<div class="setup-right">
+					<div class="setup-section">
+						<h3>🔊 声道模式</h3>
+						<div class="option-cards">
+							<div
+								class="option-card selected"
+								data-value="1"
+								onclick="selectOption('channel', '1', this)"
+							>
+								<div class="icon">5.1</div>
+								<div class="title">5.1 声道</div>
+								<div class="desc">6 声道环绕</div>
+							</div>
+							<div
+								class="option-card"
+								data-value="2"
+								onclick="selectOption('channel', '2', this)"
+							>
+								<div class="icon">7.1</div>
+								<div class="title">7.1 声道</div>
+								<div class="desc">8 声道环绕</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="setup-section">
+						<h3>
+							📁 目录设置
+							<span style="font-size: 0.8em; color: #888; font-weight: normal"
+								>(可直接输入路径或点击浏览)</span
+							>
+						</h3>
+						<div class="dir-selector">
+							<label>输入目录（音频文件所在目录）</label>
+							<div class="dir-row">
+								<input
+									type="text"
+									id="inputDir"
+									placeholder="输入路径或点击浏览选择目录..."
+									oninput="onDirInput('input')"
+								/>
+								<button class="btn btn-browse" onclick="browseDir('input')">
+									📂 浏览
+								</button>
+							</div>
+						</div>
+						<div class="dir-selector">
+							<label>输出目录（混音文件保存位置）</label>
+							<div class="dir-row">
+								<input
+									type="text"
+									id="outputDir"
+									placeholder="输入路径或点击浏览选择目录..."
+									oninput="onDirInput('output')"
+								/>
+								<button class="btn btn-browse" onclick="browseDir('output')">
+									📂 浏览
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<button
+						class="btn btn-start"
+						id="btnStart"
+						onclick="startProcessing()"
+						disabled
+					>
+						🚀 开始处理
+					</button>
+
+					<p class="status-text" id="statusText">请选择输入和输出目录</p>
 				</div>
 			</div>
-
-			<div class="setup-section">
-				<h3>🔊 声道模式</h3>
-				<div class="option-cards">
-					<div
-						class="option-card selected"
-						data-value="1"
-						onclick="selectOption('channel', '1', this)"
-					>
-						<div class="icon">5.1</div>
-						<div class="title">5.1 声道</div>
-						<div class="desc">6 声道环绕</div>
-					</div>
-					<div
-						class="option-card"
-						data-value="2"
-						onclick="selectOption('channel', '2', this)"
-					>
-						<div class="icon">7.1</div>
-						<div class="title">7.1 声道</div>
-						<div class="desc">8 声道环绕</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="setup-section">
-				<h3>
-					📁 目录设置
-					<span style="font-size: 0.8em; color: #888; font-weight: normal"
-						>(可直接输入路径或点击浏览)</span
-					>
-				</h3>
-				<div class="dir-selector">
-					<label>输入目录（音频文件所在目录）</label>
-					<div class="dir-row">
-						<input
-							type="text"
-							id="inputDir"
-							placeholder="输入路径或点击浏览选择目录..."
-							oninput="onDirInput('input')"
-						/>
-						<button class="btn btn-browse" onclick="browseDir('input')">
-							📂 浏览
-						</button>
-					</div>
-				</div>
-				<div class="dir-selector">
-					<label>输出目录（混音文件保存位置）</label>
-					<div class="dir-row">
-						<input
-							type="text"
-							id="outputDir"
-							placeholder="输入路径或点击浏览选择目录..."
-							oninput="onDirInput('output')"
-						/>
-						<button class="btn btn-browse" onclick="browseDir('output')">
-							📂 浏览
-						</button>
-					</div>
-				</div>
-			</div>
-
-			<button
-				class="btn btn-start"
-				id="btnStart"
-				onclick="startProcessing()"
-				disabled
-			>
-				🚀 开始处理
-			</button>
-
-			<p class="status-text" id="statusText">请选择输入和输出目录</p>
 		</div>
 
 		<div class="loading-overlay" id="loadingOverlay">
@@ -390,10 +417,64 @@
 		<script>
 			const config = {
 				hardware: "1",
+				model: "0",
 				channel: "1",
 				inputDir: "",
 				outputDir: "",
 			};
+
+			async function loadModels() {
+				try {
+					const response = await fetch("/api/models");
+					const data = await response.json();
+
+					const modelCards = document.getElementById("modelCards");
+					modelCards.innerHTML = "";
+
+					if (data.models && data.models.length > 0) {
+						data.models.forEach((model, index) => {
+							const isSelected = model.id === data.current;
+							if (isSelected) {
+								config.model = model.id;
+							}
+
+							const card = document.createElement("div");
+							card.className = `option-card${isSelected ? " selected" : ""}`;
+							card.dataset.value = model.id;
+							card.onclick = function () {
+								selectOption("model", model.id, this);
+							};
+
+							card.innerHTML = `
+								<div class="icon">🎼</div>
+								<div class="title">${model.display_name}</div>
+								<div class="desc">${model.model_file}</div>
+							`;
+
+							modelCards.appendChild(card);
+						});
+					} else {
+						modelCards.innerHTML = `
+							<div class="option-card selected" data-value="0">
+								<div class="icon">🎼</div>
+								<div class="title">默认模型</div>
+								<div class="desc">未找到其他模型</div>
+							</div>
+						`;
+					}
+				} catch (error) {
+					console.error("加载模型列表失败:", error);
+					document.getElementById("modelCards").innerHTML = `
+						<div class="option-card selected" data-value="0">
+							<div class="icon">⚠️</div>
+							<div class="title">加载失败</div>
+							<div class="desc">无法获取模型列表</div>
+						</div>
+					`;
+				}
+			}
+
+			document.addEventListener("DOMContentLoaded", loadModels);
 
 			function selectOption(type, value, element) {
 				config[type] = value;

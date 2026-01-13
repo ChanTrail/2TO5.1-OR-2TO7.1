@@ -1,1 +1,0 @@
-.\env\python.exe inference.py --model_type bs_roformer --config_path configs/logic_pro_config_v1.yaml --start_check_point models/logic_roformer.pt --input_folder input --store_dir output --extract_instrumental --force_cpu

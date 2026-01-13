@@ -97,11 +97,18 @@
 			}
 
 			.channel-layout {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 25px;
+				display: grid;
+				gap: 22px;
 				margin-bottom: 30px;
 				justify-content: center;
+			}
+
+			.channel-layout.layout-51 {
+				grid-template-columns: repeat(3, auto);
+			}
+
+			.channel-layout.layout-71 {
+				grid-template-columns: repeat(4, auto);
 			}
 
 			.mixing-hint {
@@ -1750,6 +1757,13 @@
 			function renderChannelLayout() {
 				const layout = document.getElementById("channelLayout");
 				layout.innerHTML = "";
+
+				layout.className = "channel-layout";
+				if (channelCount === 5) {
+					layout.classList.add("layout-51");
+				} else {
+					layout.classList.add("layout-71");
+				}
 
 				const channelNames =
 					channelCount === 5 ? channelNames51 : channelNames71;

@@ -79,6 +79,11 @@ def run_folder(model, args, config, device, verbose: bool = False):
                 if config.audio['num_channels'] == 2:
                     print(f'Convert mono track to stereo...')
                     mix = np.concatenate([mix, mix], axis=0)
+        elif len(mix.shape) == 2 and mix.shape[0] == 2:
+            if 'stereo' in config.model:
+                if not config.model['stereo']:
+                    print("Converted stereo to mono to match config requirements")
+                    mix = np.mean(mix, axis=0, keepdims=True)
 
         mix_orig = mix.copy()
         if 'normalize' in config.inference:
@@ -137,8 +142,9 @@ def proc_folder(dict_args):
 
     model, config = get_model_from_config(args.model_type, args.config_path)
 
-    if args.start_check_point != '':
-        load_start_checkpoint(args, model, type_='inference')
+    if args.start_check_point:
+        checkpoint = torch.load(args.start_check_point, weights_only=False, map_location='cpu')
+        load_start_checkpoint(args, model, checkpoint, type_='inference')
 
     print("Instruments: {}".format(config.training.instruments))
 

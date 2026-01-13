@@ -1,5 +1,5 @@
 # CI/CD 配置文件
-# 立体声转5.1&7.1声道混音工具 v3.0.0
+# 立体声转5.1&7.1声道混音工具 v3.1.0
 
 name: CI/CD Pipeline
 
@@ -8,8 +8,7 @@ on:
     branches: [main, master, develop]
   pull_request:
     branches: [main, master]
-  workflow_dispatch: # 允许手动触发
-
+  workflow_dispatch:
 env:
   PYTHON_VERSION: "3.12"
 
@@ -131,7 +130,14 @@ jobs:
         continue-on-error: true
 
       - name: 检查依赖漏洞
-        run: safety check -r requirements.txt || true
+        run: |
+          # 跳过 Windows 特定依赖的检查 (triton, CUDA 相关)
+          # requirements.txt 包含平台特定的轮子文件
+          echo "Skipping full requirements.txt check (contains Windows-specific wheels)"
+          echo "Checking core dependencies only..."
+          pip install safety || true
+          echo -e "flask\npydub\nnumpy\nsoundfile\nlibrosa\ntqdm" > requirements-core.txt
+          safety check -r requirements-core.txt || true
         continue-on-error: true
 
   # ==================== 构建测试 ====================
@@ -163,6 +169,7 @@ jobs:
           if (!(Test-Path "web_templates/setup.html")) { throw "setup.html not found" }
           if (!(Test-Path "web_templates/mixer.html")) { throw "mixer.html not found" }
           if (!(Test-Path "logic_bsroformer/inference.py")) { throw "inference.py not found" }
+          if (!(Test-Path "model.txt")) { throw "model.txt not found" }
           Write-Host "All required files present!"
         shell: pwsh
 

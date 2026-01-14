@@ -121,7 +121,7 @@ cd 2TO5.1-OR-2TO7.1
 ├── web_templates/          # Web 页面模板
 │   ├── setup.html          # 设置页面
 │   └── mixer.html          # 混音器页面
-├── bsroformer/       # 音频分离模块
+├── bsroformer/             # 音频分离模块
 │   ├── inference.py        # 推理脚本
 │   ├── configs/            # 模型配置
 │   └── models/             # 模型文件 (需下载)

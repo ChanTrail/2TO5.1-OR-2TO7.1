@@ -653,6 +653,31 @@
 				border-top-color: #00d4ff;
 				border-radius: 50%;
 				animation: spin 1s linear infinite;
+				margin: 0 auto;
+			}
+
+			.export-progress-container {
+				width: 300px;
+				height: 8px;
+				background: rgba(255, 255, 255, 0.1);
+				border-radius: 4px;
+				margin: 15px auto 0;
+				overflow: hidden;
+			}
+
+			.export-progress-bar {
+				height: 100%;
+				background: linear-gradient(90deg, #00d4ff 0%, #0099cc 100%);
+				border-radius: 4px;
+				transition: width 0.3s ease;
+				width: 0%;
+			}
+
+			.export-progress-percent {
+				color: #00d4ff;
+				font-size: 1.1em;
+				margin-top: 8px;
+				font-weight: bold;
 			}
 
 			@keyframes spin {
@@ -1158,6 +1183,10 @@
 			<div class="loading-spinner">
 				<div class="spinner"></div>
 				<p class="loading-text" id="loadingText">正在处理...</p>
+				<div class="export-progress-container" id="exportProgressContainer" style="display:none">
+					<div class="export-progress-bar" id="exportProgressBar"></div>
+				</div>
+				<div class="export-progress-percent" id="exportProgressPercent" style="display:none"></div>
 			</div>
 		</div>
 
@@ -1576,64 +1605,88 @@
 				if (!confirm("确定要导出所有音频文件吗？\n这可能需要一些时间。"))
 					return;
 
-				showLoading("正在导出所有音频文件...");
+				showLoadingWithProgress("正在导出所有音频文件...", 0, 0);
 
 				try {
-					const response = await fetch("/api/export_all", {
+					const startResp = await fetch("/api/export_all", {
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
 					});
-					const data = await response.json();
+					const startData = await startResp.json();
 
-					if (data.status === "ok") {
-						let successCount = data.results.filter(
-							(r) => r.status === "ok"
-						).length;
-						let skipCount = data.results.filter(
-							(r) => r.status === "already_exported"
-						).length;
-						let errorResults = data.results.filter((r) => r.status === "error");
-						let errorCount = errorResults.length;
+					if (startData.status !== "started") {
+						hideLoading();
+						showToast("导出启动失败: " + (startData.error || "未知错误"), "error");
+						return;
+					}
 
-						const statusResponse = await fetch("/api/status");
-						const statusData = await statusResponse.json();
-						audioFiles = statusData.audio_files || [];
-						renderAudioFilesList();
-
-						showToast(
-							`导出完成: ${successCount} 成功, ${skipCount} 已跳过, ${errorCount} 失败`,
-							errorCount > 0 ? "warning" : "success"
-						);
-
-						if (errorCount > 0) {
-							let errorDetails = errorResults
-								.map((r) => `${r.name}: ${r.error || "未知错误"}`)
-								.join("\n");
-							alert("以下文件导出失败：\n\n" + errorDetails);
-						}
-
-						if (data.all_exported) {
-							setTimeout(() => {
-								alert("所有音频已导出完成！程序将自动关闭。");
-								const deleteTemp = confirm(
-									"是否删除分离的临时音频文件？\n选择[确定]删除，选择[取消]保留。"
-								);
-								fetch("/api/shutdown", {
-									method: "POST",
-									headers: { "Content-Type": "application/json" },
-									body: JSON.stringify({ delete_temp: deleteTemp }),
+					// 轮询导出进度
+					const data = await new Promise((resolve, reject) => {
+						function poll() {
+							fetch("/api/export_progress")
+								.then((r) => r.json())
+								.then((d) => {
+									showLoadingWithProgress(
+										"正在导出所有音频文件...",
+										d.progress,
+										d.total
+									);
+									if (d.is_exporting) {
+										setTimeout(poll, 400);
+									} else {
+										resolve(d);
+									}
+								})
+								.catch((e) => {
+									setTimeout(poll, 800);
 								});
-								window.close();
-							}, 1000);
 						}
-					} else {
-						showToast("导出失败: " + (data.error || "未知错误"), "error");
+						poll();
+					});
+
+					hideLoading();
+
+					const results = data.results || [];
+					const successCount = results.filter((r) => r.status === "ok").length;
+					const skipCount = results.filter((r) => r.status === "already_exported").length;
+					const errorResults = results.filter((r) => r.status === "error");
+					const errorCount = errorResults.length;
+
+					const statusResponse = await fetch("/api/status");
+					const statusData = await statusResponse.json();
+					audioFiles = statusData.audio_files || [];
+					renderAudioFilesList();
+
+					showToast(
+						`导出完成: ${successCount} 成功, ${skipCount} 已跳过, ${errorCount} 失败`,
+						errorCount > 0 ? "warning" : "success"
+					);
+
+					if (errorCount > 0) {
+						const errorDetails = errorResults
+							.map((r) => `${r.name}: ${r.error || "未知错误"}`)
+							.join("\n");
+						alert("以下文件导出失败：\n\n" + errorDetails);
+					}
+
+					if (data.all_exported) {
+						setTimeout(() => {
+							alert("所有音频已导出完成！程序将自动关闭。");
+							const deleteTemp = confirm(
+								"是否删除分离的临时音频文件？\n选择[确定]删除，选择[取消]保留。"
+							);
+							fetch("/api/shutdown", {
+								method: "POST",
+								headers: { "Content-Type": "application/json" },
+								body: JSON.stringify({ delete_temp: deleteTemp }),
+							});
+							window.close();
+						}, 1000);
 					}
 				} catch (e) {
+					hideLoading();
 					showToast("导出失败: " + e.message, "error");
 				}
-
-				hideLoading();
 			}
 
 			async function resetToServerDefault() {
@@ -2477,11 +2530,26 @@
 
 			function showLoading(text) {
 				document.getElementById("loadingText").textContent = text;
+				document.getElementById("exportProgressContainer").style.display = "none";
+				document.getElementById("exportProgressPercent").style.display = "none";
+				document.getElementById("loadingOverlay").classList.add("active");
+			}
+
+			function showLoadingWithProgress(text, current, total) {
+				document.getElementById("loadingText").textContent = text;
+				const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+				document.getElementById("exportProgressBar").style.width = pct + "%";
+				document.getElementById("exportProgressPercent").textContent =
+					`${current} / ${total}  (${pct}%)`;
+				document.getElementById("exportProgressContainer").style.display = "block";
+				document.getElementById("exportProgressPercent").style.display = "block";
 				document.getElementById("loadingOverlay").classList.add("active");
 			}
 
 			function hideLoading() {
 				document.getElementById("loadingOverlay").classList.remove("active");
+				document.getElementById("exportProgressContainer").style.display = "none";
+				document.getElementById("exportProgressPercent").style.display = "none";
 			}
 
 			function showToast(message, type = "info") {

@@ -159,6 +159,11 @@ class MixerSession:
         self.processing_error = ""
         self.failed_files = []
 
+        self.is_exporting = False
+        self.export_progress = 0
+        self.export_total = 0
+        self.export_results = []
+
     def get_current_model(self):
         """获取当前选择的模型配置"""
         for model in MODEL_CONFIGS:
@@ -494,7 +499,10 @@ def process_dir_requests(root):
         while True:
             dir_type = _dir_request_queue.get_nowait()
             title = "选择音频文件所在目录" if dir_type == "input" else "选择输出目录"
+            root.attributes('-topmost', True)
+            root.update()
             path = filedialog.askdirectory(parent=root, title=title, initialdir=".")
+            root.attributes('-topmost', False)
             _dir_response_queue.put(path if path else None)
     except queue.Empty:
         pass
@@ -518,6 +526,7 @@ def separate_audio_internal(input_file, hardware_choice, mixer_session=None):
 
     args = [
         ".\\Python\\python",
+        "-X", "utf8",
         "bsroformer\\inference.py",
         "--model_type",
         "bs_roformer",
@@ -634,10 +643,15 @@ def process_audio_files_thread(config):
             mixer_session.default_config = get_default_channel_config_71()
 
         audio_files_to_process = []
+        AUDIO_EXTENSIONS = {
+            '.wav', '.mp3', '.flac', '.ogg', '.aiff', '.aif',
+            '.m4a', '.wma', '.aac', '.opus', '.alac', '.ape',
+        }
         files = [
             f
             for f in os.listdir(input_directory)
             if os.path.isfile(os.path.join(input_directory, f))
+            and os.path.splitext(f)[1].lower() in AUDIO_EXTENSIONS
         ]
         total_files = len(files)
 
@@ -1062,38 +1076,74 @@ def export_final():
 
 @app.route("/api/export_all", methods=["POST"])
 def export_all():
-    """导出所有音频文件"""
+    """导出所有音频文件（异步，后台线程执行）"""
     if not mixer_session.is_ready:
         return jsonify({"error": "会话未就绪"}), 400
 
-    results = []
-    for i, af in enumerate(mixer_session.audio_files):
-        if af.export_completed:
-            results.append({"name": af.name, "status": "already_exported"})
-            continue
+    if mixer_session.is_exporting:
+        return jsonify({"error": "正在导出中，请勿重复操作"}), 400
 
-        if not af.is_loaded:
-            af.source_segments = load_source_audio(af.input_dir)
-            af.is_loaded = True
+    def _export_thread():
+        mixer_session.is_exporting = True
+        mixer_session.export_results = []
 
-        try:
-            multi_channel = generate_preview_audio(
-                af.source_segments, af.channel_config, mixer_session.channel_count
-            )
-            sf.write(
-                af.output_file, multi_channel, mixer_session.sample_rate, format="FLAC"
-            )
-            af.export_completed = True
-            results.append(
-                {"name": af.name, "status": "ok", "output_file": af.output_file}
-            )
-        except Exception as e:
-            results.append({"name": af.name, "status": "error", "error": str(e)})
+        files_to_export = [
+            af for af in mixer_session.audio_files if not af.export_completed
+        ]
+        mixer_session.export_total = len(files_to_export)
+        mixer_session.export_progress = 0
 
+        for af in files_to_export:
+            if not af.is_loaded:
+                af.source_segments = load_source_audio(af.input_dir)
+                af.is_loaded = True
+
+            try:
+                multi_channel = generate_preview_audio(
+                    af.source_segments, af.channel_config, mixer_session.channel_count
+                )
+                sf.write(
+                    af.output_file,
+                    multi_channel,
+                    mixer_session.sample_rate,
+                    format="FLAC",
+                )
+                af.export_completed = True
+                mixer_session.export_results.append(
+                    {"name": af.name, "status": "ok", "output_file": af.output_file}
+                )
+            except Exception as e:
+                mixer_session.export_results.append(
+                    {"name": af.name, "status": "error", "error": str(e)}
+                )
+
+            mixer_session.export_progress += 1
+
+        # 补充已跳过的文件记录
+        exported_names = {r["name"] for r in mixer_session.export_results}
+        for af in mixer_session.audio_files:
+            if af.export_completed and af.name not in exported_names:
+                mixer_session.export_results.append(
+                    {"name": af.name, "status": "already_exported"}
+                )
+
+        mixer_session.is_exporting = False
+
+    t = threading.Thread(target=_export_thread, daemon=True)
+    t.start()
+
+    return jsonify({"status": "started"})
+
+
+@app.route("/api/export_progress")
+def export_progress():
+    """查询导出进度"""
     return jsonify(
         {
-            "status": "ok",
-            "results": results,
+            "is_exporting": mixer_session.is_exporting,
+            "progress": mixer_session.export_progress,
+            "total": mixer_session.export_total,
+            "results": None if mixer_session.is_exporting else mixer_session.export_results,
             "all_exported": mixer_session.get_all_export_completed(),
         }
     )

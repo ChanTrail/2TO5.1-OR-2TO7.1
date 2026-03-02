@@ -1,12 +1,12 @@
 # 🎵 立体声转5.1&7.1声道混音工具
 
 <p align="center">
-  <strong>Web GUI 版本 v3.1.0</strong><br>
+  <strong>Web GUI 版本 v3.1.1</strong><br>
   <em>将普通立体声音频转换为沉浸式环绕声体验</em>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.1.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.1.1-blue.svg" alt="Version">
   <img src="https://img.shields.io/badge/python-3.12-green.svg" alt="Python">
   <img src="https://img.shields.io/badge/license-GPL--3.0-orange.svg" alt="License">
   <img src="https://img.shields.io/badge/platform-Windows-lightgrey.svg" alt="Platform">
@@ -25,12 +25,14 @@
 ## ✨ 功能特点
 
 ### 🎛️ Web GUI 可视化界面
+
 - 现代化的 Web 界面，直观易用
 - 实时预览混音效果
 - 可视化环绕声声道布局
 - 支持独奏/静音单个声道
 
 ### 🔊 智能音频处理
+
 - **双模式转换**：支持 5.1 和 7.1 环绕声格式，可随时切换
 - **多模型支持**：可在设置页面切换不同的分离模型
 - **智能音频分离**：将音频分离为 7 个独立音轨（vocals, bass, drums, guitar, piano, instrumental, other）
@@ -38,25 +40,27 @@
 - **配置槽功能**：保存和快速切换多组混音配置
 
 ### 📦 批量处理
+
 - 支持多文件批量处理
 - 一键应用配置到所有文件
 - 智能跳过已处理文件
 - 实时显示分离进度
 
 ### 🚀 高性能
+
 - **GPU 加速**：支持 CUDA 加速（推荐 3GB+ 显存）
 - **CPU 模式**：无显卡也可使用
 - **高质量输出**：FLAC 无损格式
 
 ## 💻 系统要求
 
-| 项目 | 最低要求 | 推荐配置 |
-|------|---------|---------|
-| 操作系统 | Windows 10 | Windows 10/11 |
-| Python | 3.12（整合包已内置） | 3.12 |
-| 显卡 | - | NVIDIA GPU (≥3GB 显存) |
-| 内存 | 8GB | 16GB+ |
-| 磁盘空间 | 10GB | 20GB+ |
+| 项目     | 最低要求             | 推荐配置               |
+| -------- | -------------------- | ---------------------- |
+| 操作系统 | Windows 10           | Windows 10/11          |
+| Python   | 3.12（整合包已内置） | 3.12                   |
+| 显卡     | -                    | NVIDIA GPU (≥3GB 显存) |
+| 内存     | 8GB                  | 16GB+                  |
+| 磁盘空间 | 10GB                 | 20GB+                  |
 
 ## 📥 安装说明
 
@@ -66,7 +70,6 @@
 
 下载并解压整合包
 [下载](https://github.com/ChanTrail/2TO5.1-OR-2TO7.1/releases/latest)
-
 
 ### 手动安装
 
@@ -81,16 +84,21 @@ cd 2TO5.1-OR-2TO7.1
 # 下载模型文件到 bsroformer/models/
 # 下载模型配置文件到 bsroformer/configs/
 ```
+
 `模型及配置文件下载`
+
 - [HuggingFace 下载](https://huggingface.co/ChanTrail/BS-RoFormer)
+
 ## 🚀 快速开始
 
 ### 方式一：双击启动
+
 ```
 双击 start.bat
 ```
 
 ### 方式二：命令行启动
+
 ```bash
 .\Python\python main.py
 ```
@@ -114,7 +122,7 @@ cd 2TO5.1-OR-2TO7.1
 ## 📁 目录结构
 
 ```
-2TO5.1-OR-2TO7.1/           
+2TO5.1-OR-2TO7.1/
 ├── main.py                 # 主程序入口
 ├── web_mixer.py            # Web GUI 服务器
 ├── model.txt               # 模型配置文件
@@ -139,16 +147,18 @@ cd 2TO5.1-OR-2TO7.1
 ## 🎚️ 声道配置
 
 ### 5.1 声道布局
-| 声道 | 英文名 | 默认音源 |
-|------|--------|---------|
-| 左前 (L) | Left Front | drums (左声道) |
-| 右前 (R) | Right Front | drums (右声道) |
-| 中置 (C) | Center | vocals (单声道) |
-| 低音 (LFE) | Low Frequency Effects | bass (单声道) |
-| 左环绕 (LS) | Left Surround | other, vocals |
-| 右环绕 (RS) | Right Surround | other, vocals |
+
+| 声道        | 英文名                | 默认音源        |
+| ----------- | --------------------- | --------------- |
+| 左前 (L)    | Left Front            | drums (左声道)  |
+| 右前 (R)    | Right Front           | drums (右声道)  |
+| 中置 (C)    | Center                | vocals (单声道) |
+| 低音 (LFE)  | Low Frequency Effects | bass (单声道)   |
+| 左环绕 (LS) | Left Surround         | other, vocals   |
+| 右环绕 (RS) | Right Surround        | other, vocals   |
 
 ### 7.1 声道布局
+
 在 5.1 基础上增加：
 | 声道 | 英文名 | 默认音源 |
 |------|--------|---------|
@@ -184,6 +194,7 @@ cd 2TO5.1-OR-2TO7.1
 <summary><strong>Q: GPU 模式运行出错？</strong></summary>
 
 确保：
+
 1. 已安装 NVIDIA 显卡驱动
 2. 显存 ≥ 3GB
 3. 如仍有问题，切换到 CPU 模式
@@ -203,6 +214,7 @@ cd 2TO5.1-OR-2TO7.1
 <summary><strong>Q: 为什么输出是 FLAC 格式？</strong></summary>
 
 FLAC 是无损压缩格式，可以：
+
 - 保持原始音频质量
 - 支持多声道音频
 - 文件大小适中
@@ -219,17 +231,20 @@ FLAC 是无损压缩格式，可以：
 ## 📋 依赖项
 
 ### 核心依赖
+
 - **Flask** - Web 服务器
 - **PyDub** - 音频处理
 - **NumPy** - 数值计算
 - **SoundFile** - 音频文件 I/O
 
 ### 深度学习
+
 - **PyTorch 2.8.0+cu129** - 深度学习框架
 - **TorchAudio** - 音频处理
 - **BS-RoFormer** - 音频分离模型
 
 ### 其他
+
 - librosa, tqdm, einops, omegaconf 等
 
 完整依赖列表请参见 `requirements.txt`
@@ -247,6 +262,6 @@ FLAC 是无损压缩格式，可以：
 ---
 
 <p align="center">
-  <strong>立体声转5.1&7.1声道混音工具 v3.1.0</strong><br>
+  <strong>立体声转5.1&7.1声道混音工具 v3.1.1</strong><br>
   <em>by ChanTrail</em>
 </p>

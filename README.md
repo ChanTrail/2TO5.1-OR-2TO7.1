@@ -154,16 +154,18 @@ cd 2TO5.1-OR-2TO7.1
 | 右前 (R)    | Right Front           | drums (右声道)  |
 | 中置 (C)    | Center                | vocals (单声道) |
 | 低音 (LFE)  | Low Frequency Effects | bass (单声道)   |
-| 左环绕 (LS) | Left Surround         | other, vocals   |
-| 右环绕 (RS) | Right Surround        | other, vocals   |
+| 左环绕 (LS) | Left Surround         | vocals, piano, guitar, other   |
+| 右环绕 (RS) | Right Surround        | vocals, piano, guitar, other   |
 
 ### 7.1 声道布局
 
-在 5.1 基础上增加：
+在 5.1 基础上改变环绕声道：
 | 声道 | 英文名 | 默认音源 |
 |------|--------|---------|
-| 左后环绕 (LB) | Left Back | guitar, other, vocals |
-| 右后环绕 (RB) | Right Back | guitar, other, vocals |
+| 左环绕 (LS) | Left Surround         | vocals, piano   |
+| 右环绕 (RS) | Right Surround        | vocals, piano   |
+| 左后环绕 (LB) | Left Back | vocals, guitar, other |
+| 右后环绕 (RB) | Right Back | vocals, guitar, other |
 
 ## 🔧 技术架构
 

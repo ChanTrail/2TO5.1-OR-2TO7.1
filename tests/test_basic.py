@@ -31,10 +31,10 @@ class TestProjectStructure:
         assert os.path.exists('web_templates/setup.html'), "setup.html 不存在"
         assert os.path.exists('web_templates/mixer.html'), "mixer.html 不存在"
     
-    def test_logic_bsroformer_exists(self):
+    def test_bsroformer_exists(self):
         """测试音频分离模块是否存在"""
-        assert os.path.exists('logic_bsroformer/inference.py'), "inference.py 不存在"
-        assert os.path.exists('logic_bsroformer/configs'), "configs 目录不存在"
+        assert os.path.exists('bsroformer/inference.py'), "inference.py 不存在"
+        assert os.path.exists('bsroformer/configs'), "configs 目录不存在"
 
 
 class TestPythonSyntax:
@@ -131,7 +131,7 @@ class TestConfigFiles:
     
     def test_model_config_exists(self):
         """测试模型配置文件是否存在"""
-        config_path = 'logic_bsroformer/configs/logic_pro_config_v1.yaml'
+        config_path = 'bsroformer/configs/logic_pro_config_v1.yaml'
         assert os.path.exists(config_path), f"配置文件不存在: {config_path}"
     
     def test_requirements_not_empty(self):

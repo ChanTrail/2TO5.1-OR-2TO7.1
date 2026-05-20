@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 立体声转5.1&7.1声道混音工具 - 基础测试
-v3.0.0 by 陈迹启行
+v3.1.1 by ChanTrail
 """
 
 import os
@@ -66,13 +66,13 @@ class TestVersionInfo:
         """测试 main.py 中的版本号"""
         with open('main.py', 'r', encoding='utf-8') as f:
             content = f.read()
-        assert 'v3.0.0' in content or '3.0.0' in content, "版本号应为 v3.0.0"
+        assert 'v3.1.1' in content or '3.1.1' in content, "版本号应为 v3.1.1"
     
     def test_author_info(self):
         """测试作者信息"""
         with open('main.py', 'r', encoding='utf-8') as f:
             content = f.read()
-        assert '陈迹启行' in content, "作者信息应为 陈迹启行"
+        assert 'ChanTrail' in content, "作者信息应为 ChanTrail"
 
 
 class TestHTMLTemplates:

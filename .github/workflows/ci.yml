@@ -165,7 +165,7 @@ jobs:
           if (!(Test-Path "requirements.txt")) { throw "requirements.txt not found" }
           if (!(Test-Path "web_templates/setup.html")) { throw "setup.html not found" }
           if (!(Test-Path "web_templates/mixer.html")) { throw "mixer.html not found" }
-          if (!(Test-Path "logic_bsroformer/inference.py")) { throw "inference.py not found" }
+          if (!(Test-Path "bsroformer/inference.py")) { throw "inference.py not found" }
           if (!(Test-Path "model.txt")) { throw "model.txt not found" }
           Write-Host "All required files present!"
         shell: pwsh
@@ -174,7 +174,7 @@ jobs:
         run: |
           python -m py_compile main.py
           python -m py_compile web_mixer.py
-          python -m py_compile logic_bsroformer/inference.py
+          python -m py_compile bsroformer/inference.py
           Write-Host "Syntax check passed!"
         shell: pwsh
 

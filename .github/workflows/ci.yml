@@ -93,14 +93,12 @@ jobs:
 
       - name: 运行单元测试
         run: |
-          pytest tests/ -v --tb=short || echo "No tests found or tests skipped"
-        continue-on-error: true
+          pytest tests/ -v --tb=short
 
       - name: 语法检查
         run: |
           python -m py_compile main.py
           python -m py_compile web_mixer.py
-        continue-on-error: true
 
   # ==================== 安全检查 ====================
   security:

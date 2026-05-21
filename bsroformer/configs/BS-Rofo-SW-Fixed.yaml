@@ -92,11 +92,11 @@ model:
   mask_estimator_depth: 2
   multi_stft_resolution_loss_weight: 1.0
   multi_stft_resolutions_window_sizes: !!python/tuple
-  - 4096
-  - 2048
-  - 1024
-  - 512
-  - 256
+    - 4096
+    - 2048
+    - 1024
+    - 512
+    - 256
   multi_stft_hop_size: 147
   multi_stft_normalized: False
   mlp_expansion_factor: 4
@@ -107,7 +107,7 @@ training:
   batch_size: 2
   gradient_accumulation_steps: 1
   grad_clip: 0
-  instruments: ['bass', 'drums', 'other', 'vocals', 'guitar', 'piano']
+  instruments: ["bass", "drums", "other", "vocals", "guitar", "piano"]
   patience: 3
   reduce_factor: 0.95
   target_instrument: null
@@ -137,7 +137,8 @@ augmentations:
   loudness_min: 0.5
   loudness_max: 1.5
   mixup: true # mix several stems of same type with some probability (only works for dataset types: 1, 2, 3)
-  mixup_probs: !!python/tuple # 2 additional stems of the same type (1st with prob 0.2, 2nd with prob 0.02)
+  mixup_probs:
+    !!python/tuple # 2 additional stems of the same type (1st with prob 0.2, 2nd with prob 0.02)
     - 0.2
     - 0.02
   mixup_loudness_min: 0.5
@@ -149,15 +150,15 @@ augmentations:
     random_polarity: 0.5 # polarity change (multiply waveform to -1)
 
   vocals:
-      pitch_shift: 0.1
-      pitch_shift_min_semitones: -5
-      pitch_shift_max_semitones: 5
-      seven_band_parametric_eq: 0.1
-      seven_band_parametric_eq_min_gain_db: -9
-      seven_band_parametric_eq_max_gain_db: 9
-      tanh_distortion: 0.1
-      tanh_distortion_min: 0.1
-      tanh_distortion_max: 0.7
+    pitch_shift: 0.1
+    pitch_shift_min_semitones: -5
+    pitch_shift_max_semitones: 5
+    seven_band_parametric_eq: 0.1
+    seven_band_parametric_eq_min_gain_db: -9
+    seven_band_parametric_eq_max_gain_db: 9
+    tanh_distortion: 0.1
+    tanh_distortion_min: 0.1
+    tanh_distortion_max: 0.7
   bass:
     pitch_shift: 0.1
     pitch_shift_min_semitones: -2
@@ -188,7 +189,6 @@ augmentations:
     time_stretch: 0.1
     time_stretch_min_rate: 0.8
     time_stretch_max_rate: 1.25
-
 
 inference:
   batch_size: 1

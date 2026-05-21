@@ -148,22 +148,22 @@ cd 2TO5.1-OR-2TO7.1
 
 ### 5.1 声道布局
 
-| 声道        | 英文名                | 默认音源        |
-| ----------- | --------------------- | --------------- |
-| 左前 (L)    | Left Front            | drums (左声道)  |
-| 右前 (R)    | Right Front           | drums (右声道)  |
-| 中置 (C)    | Center                | vocals (单声道) |
-| 低音 (LFE)  | Low Frequency Effects | bass (单声道)   |
-| 左环绕 (LS) | Left Surround         | vocals, piano, guitar, other   |
-| 右环绕 (RS) | Right Surround        | vocals, piano, guitar, other   |
+| 声道        | 英文名                | 默认音源                     |
+| ----------- | --------------------- | ---------------------------- |
+| 左前 (L)    | Left Front            | drums (左声道)               |
+| 右前 (R)    | Right Front           | drums (右声道)               |
+| 中置 (C)    | Center                | vocals (单声道)              |
+| 低音 (LFE)  | Low Frequency Effects | bass (单声道)                |
+| 左环绕 (LS) | Left Surround         | vocals, piano, guitar, other |
+| 右环绕 (RS) | Right Surround        | vocals, piano, guitar, other |
 
 ### 7.1 声道布局
 
 在 5.1 基础上改变环绕声道：
 | 声道 | 英文名 | 默认音源 |
 |------|--------|---------|
-| 左环绕 (LS) | Left Surround         | vocals, piano   |
-| 右环绕 (RS) | Right Surround        | vocals, piano   |
+| 左环绕 (LS) | Left Surround | vocals, piano |
+| 右环绕 (RS) | Right Surround | vocals, piano |
 | 左后环绕 (LB) | Left Back | vocals, guitar, other |
 | 右后环绕 (RB) | Right Back | vocals, guitar, other |
 

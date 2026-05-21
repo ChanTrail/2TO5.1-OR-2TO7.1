@@ -622,8 +622,6 @@ def delete_files_only(folder_path):
 
 def process_audio_files_thread(config):
     """在后台线程中处理音频文件"""
-    global mixer_session
-
     try:
         input_directory = config["inputDir"]
         output_directory = config["outputDir"]
@@ -1299,7 +1297,7 @@ def start_web_mixer_setup(port=5000):
     bool
         是否所有文件都成功导出
     """
-    global mixer_session, _server, _tk_initialized
+    global mixer_session, _tk_initialized
 
     mixer_session = MixerSession()
     mixer_session.setup_mode = True

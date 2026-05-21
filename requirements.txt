@@ -20,6 +20,9 @@ omegaconf
 einops
 beartype
 rotary_embedding_torch
-https://huggingface.co/madbuda/triton-windows-builds/resolve/main/triton-3.0.0-cp312-cp312-win_amd64.whl
-
+https://hf-mirror.com/madbuda/triton-windows-builds/resolve/main/triton-3.0.0-cp312-cp312-win_amd64.whl ; sys_platform == 'win32'
+triton ; sys_platform == 'linux'
 sageattention
+flask
+soundfile
+wandb

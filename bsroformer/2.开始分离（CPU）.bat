@@ -1,0 +1,1 @@
+..\Python\python.exe inference.py --model_type bs_roformer --config_path configs/BS-Rofo-SW-Fixed.yaml --start_check_point models/BS-Rofo-SW-Fixed.ckpt --input_folder input --store_dir output --extract_instrumental --force_cpu

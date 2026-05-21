@@ -36,15 +36,12 @@ jobs:
         run: |
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-        continue-on-error: true
 
       - name: 检查代码格式 (Black)
-        run: black --check --diff . || true
-        continue-on-error: true
+        run: black --check --diff .
 
       - name: 检查导入排序 (isort)
-        run: isort --check-only --diff . || true
-        continue-on-error: true
+        run: isort --check-only --diff .
 
   # ==================== 单元测试 ====================
   test:
@@ -96,14 +93,12 @@ jobs:
 
       - name: 运行单元测试
         run: |
-          pytest tests/ -v --tb=short || echo "No tests found or tests skipped"
-        continue-on-error: true
+          pytest tests/ -v --tb=short
 
       - name: 语法检查
         run: |
           python -m py_compile main.py
           python -m py_compile web_mixer.py
-        continue-on-error: true
 
   # ==================== 安全检查 ====================
   security:
@@ -168,7 +163,7 @@ jobs:
           if (!(Test-Path "requirements.txt")) { throw "requirements.txt not found" }
           if (!(Test-Path "web_templates/setup.html")) { throw "setup.html not found" }
           if (!(Test-Path "web_templates/mixer.html")) { throw "mixer.html not found" }
-          if (!(Test-Path "logic_bsroformer/inference.py")) { throw "inference.py not found" }
+          if (!(Test-Path "bsroformer/inference.py")) { throw "inference.py not found" }
           if (!(Test-Path "model.txt")) { throw "model.txt not found" }
           Write-Host "All required files present!"
         shell: pwsh
@@ -177,7 +172,7 @@ jobs:
         run: |
           python -m py_compile main.py
           python -m py_compile web_mixer.py
-          python -m py_compile logic_bsroformer/inference.py
+          python -m py_compile bsroformer/inference.py
           Write-Host "Syntax check passed!"
         shell: pwsh
 

@@ -1,0 +1,9 @@
+# 模型配置文件
+# 格式: 模型文件名 -> 配置文件名 -> 显示名称
+# 模型文件位于 bsroformer/models/ 目录
+# 配置文件位于 bsroformer/configs/ 目录
+# 模型及配置文件下载地址: https://huggingface.co/ChanTrail/BS-RoFormer
+
+BS-Rofo-SW-Fixed.ckpt -> BS-Rofo-SW-Fixed.yaml -> BS-RoFormer SW Fixed (推荐)
+logic_bs_roformer.ckpt -> logic_pro_config_v1.yaml -> Logic BS-RoFormer (ckpt 格式)
+logic_roformer.pt -> logic_pro_config_v1.yaml -> Logic BS-RoFormer (pt 格式)
